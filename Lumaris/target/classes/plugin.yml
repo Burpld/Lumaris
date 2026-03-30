@@ -1,9 +1,12 @@
-name: Lumaris              # The name of your plugin
-version: 1.0               # Plugin version
-main: Burpld.lumaris.Lumaris  # Full path to your main Java class
-api-version: 1.21          # Minecraft version compatibility
+name: Lumaris
+version: 1.0
+main: Burpld.lumaris.Lumaris
+api-version: 1.21
 
-commands:                  # List of commands your plugin provides
+commands:
   spawn:
-    description: Teleports you to spawn  # Description shown in /help
-    usage: /spawn                        # Usage info
+    description: Teleports you to spawn
+    usage: /spawn
+  party:
+    description: Party system commands
+    usage: /party create|invite|accept|leave|disband|chat
