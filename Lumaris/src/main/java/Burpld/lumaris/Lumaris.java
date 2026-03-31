@@ -1,0 +1,315 @@
+package Burpld.lumaris;
+
+import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.EulerAngle;
+
+import java.util.*;
+
+public final class Lumaris extends JavaPlugin implements Listener {
+
+    // ------------------- CONFIG / SPAWN -------------------
+    private final String WORLD_NAME = "world";
+    private final double X = -97.5, Y = 178, Z = -224.5;
+    private final float YAW = -180, PITCH = 1;
+
+    // ------------------- STATE MANAGEMENT -------------------
+    private final HashMap<Player, Player> partyMap = new HashMap<>();
+    private final HashMap<Player, Player> inviteMap = new HashMap<>();
+    private final List<Player> queueList = new ArrayList<>();
+
+    private BukkitTask countdownTask = null;
+
+    // --- TESTING LIMITS (Set to 1 and 2 for your solo/alt testing) ---
+    private final int MIN_PLAYERS = 1;
+    private final int MAX_PLAYERS = 2;
+
+    @Override
+    public void onEnable() {
+        getServer().getPluginManager().registerEvents(this, this);
+        getLogger().info("Lumaris 1.21.11 Systems Enabled!");
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player player)) return true;
+
+        // --- HUB COMMAND ---
+        if (command.getName().equalsIgnoreCase("hub")) {
+            World world = Bukkit.getWorld(WORLD_NAME);
+            if (world != null) {
+                player.teleport(new Location(world, X, Y, Z, YAW, PITCH));
+                player.sendMessage("§aTeleported to Hub!");
+            }
+            return true;
+        }
+
+        // --- SPAWN NPC COMMAND ---
+        if (command.getName().equalsIgnoreCase("spawnnpc")) {
+            if (!player.isOp()) return true;
+            spawnMannequin(player.getLocation());
+            player.sendMessage("§aBattle Box Mannequin spawned!");
+            return true;
+        }
+
+        // --- PARTY COMMAND ---
+        if (command.getName().equalsIgnoreCase("party")) {
+            if (args.length == 0) {
+                player.sendMessage("§e/party <create|invite|accept|leave|queue>");
+                return true;
+            }
+
+            String sub = args[0].toLowerCase();
+            switch (sub) {
+                case "create":
+                    if (partyMap.containsKey(player)) {
+                        player.sendMessage("§cAlready in a party!");
+                        return true;
+                    }
+                    partyMap.put(player, player);
+                    player.sendMessage("§aParty created!");
+                    break;
+
+                case "invite":
+                    if (args.length < 2) return true;
+                    Player target = Bukkit.getPlayer(args[1]);
+                    if (target == null) {
+                        player.sendMessage("§cPlayer not found.");
+                        return true;
+                    }
+                    if (!player.equals(partyMap.get(player))) {
+                        player.sendMessage("§cOnly leaders can invite.");
+                        return true;
+                    }
+                    inviteMap.put(target, player);
+                    target.sendMessage("§c--------------------------------\n§aYou were invited to " + player.getName() + "'s party! /party accept\n§c--------------------------------");
+                    player.sendMessage("§aInvitation sent.");
+                    break;
+
+                case "accept":
+                    Player leader = inviteMap.remove(player);
+                    if (leader == null) {
+                        player.sendMessage("§cNo pending invites.");
+                        return true;
+                    }
+                    long size = partyMap.values().stream().filter(l -> l.equals(leader)).count();
+                    if (size >= 3) {
+                        player.sendMessage("§cParty is full (3/3)!");
+                        return true;
+                    }
+                    partyMap.put(player, leader);
+                    player.sendMessage("§aJoined " + leader.getName() + "'s party!");
+                    leader.sendMessage("§c--------------------------------\n§a" + player.getName() + " joined!\n§c--------------------------------");
+                    break;
+
+                case "queue":
+                    if (!partyMap.containsKey(player)) {
+                        addToQueue(player);
+                        checkQueue();
+                        return true;
+                    }
+                    if (!player.equals(partyMap.get(player))) {
+                        player.sendMessage("§cOnly your party leader can join the queue!");
+                        return true;
+                    }
+                    for (Player online : Bukkit.getOnlinePlayers()) {
+                        if (player.equals(partyMap.get(online))) {
+                            addToQueue(online);
+                        }
+                    }
+                    checkQueue();
+                    break;
+
+                case "leave":
+                    handleLeave(player);
+                    break;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    // ------------------- MATCHMAKING LOGIC -------------------
+
+    private void addToQueue(Player player) {
+        if (!queueList.contains(player)) {
+            queueList.add(player);
+            player.sendMessage("§aYou are now in the queue!");
+            giveLeaveItem(player);
+            startQueueTimer(player);
+        }
+    }
+
+    public void checkQueue() {
+        int count = queueList.size();
+        if (count >= MAX_PLAYERS) {
+            startGame();
+            return;
+        }
+        if (count >= MIN_PLAYERS && countdownTask == null) {
+            countdownTask = new BukkitRunnable() {
+                int timer = 30;
+                @Override
+                public void run() {
+                    if (queueList.size() < MIN_PLAYERS) {
+                        broadcastQueue("§cNot enough players. Countdown cancelled.");
+                        this.cancel();
+                        countdownTask = null;
+                        return;
+                    }
+                    if (timer <= 0) {
+                        startGame();
+                        this.cancel();
+                        return;
+                    }
+                    if (timer % 10 == 0 || timer <= 5) {
+                        broadcastQueue("§eStarting in §6" + timer + "§e seconds...");
+                    }
+                    timer--;
+                }
+            }.runTaskTimer(this, 0L, 20L);
+        }
+    }
+
+    public void startGame() {
+        if (countdownTask != null) {
+            countdownTask.cancel();
+            countdownTask = null;
+        }
+        broadcastQueue("§6§lGAME STARTING!");
+        for (Player p : queueList) {
+            p.getInventory().remove(Material.BARRIER);
+            p.getInventory().setItem(8, null);
+            p.sendActionBar(Component.text(""));
+        }
+        queueList.clear();
+    }
+
+    // ------------------- LISTENERS -------------------
+
+    @EventHandler
+    public void onMannequinClick(PlayerInteractAtEntityEvent event) {
+        if (event.getRightClicked() instanceof ArmorStand npc && npc.getScoreboardTags().contains("battlebox")) {
+            event.setCancelled(true);
+            Player player = event.getPlayer();
+
+            if (partyMap.containsKey(player) && !player.equals(partyMap.get(player))) {
+                player.sendMessage("§cOnly your party leader can join the queue!");
+            } else {
+                player.performCommand("party queue");
+            }
+        }
+    }
+
+    @EventHandler
+    public void onBarrierClick(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = event.getItem();
+
+        if (item != null && item.getType() == Material.BARRIER) {
+            event.setCancelled(true); // Stop placement
+
+            if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                if (queueList.contains(player)) {
+                    handleLeave(player);
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        handleLeave(event.getPlayer());
+    }
+
+    // ------------------- HELPERS -------------------
+
+    private void handleLeave(Player player) {
+        // 1. Instant state change
+        queueList.remove(player);
+        partyMap.remove(player);
+
+        // 2. Wipe client-side visuals immediately
+        player.sendActionBar(Component.text(""));
+        player.getInventory().setItem(8, null);
+        player.getInventory().remove(Material.BARRIER);
+
+        player.sendMessage("§c§l(!) §cYou have left the queue.");
+    }
+
+    private void broadcastQueue(String msg) {
+        for (Player p : queueList) p.sendMessage(msg);
+    }
+
+    private void startQueueTimer(Player player) {
+        new BukkitRunnable() {
+            int seconds = 0;
+            @Override
+            public void run() {
+                // If they left the queue, clear and stop task
+                if (!queueList.contains(player)) {
+                    player.sendActionBar(Component.text(""));
+                    this.cancel();
+                    return;
+                }
+                player.sendActionBar(Component.text("§aQueued! §7(" + seconds++ + "s) §e[Right-Click to Leave]"));
+            }
+        }.runTaskTimer(this, 0L, 20L);
+    }
+
+    private void spawnMannequin(Location loc) {
+        ArmorStand npc = loc.getWorld().spawn(loc, ArmorStand.class);
+        npc.setGravity(false);
+        npc.setInvulnerable(true);
+        npc.setArms(true);
+        npc.setBasePlate(false);
+        npc.addScoreboardTag("battlebox");
+        npc.setCustomNameVisible(true);
+        npc.customName(Component.text("§6§lBATTLE BOX §7[Click to Play]"));
+
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta headMeta = (SkullMeta) head.getItemMeta();
+        if (headMeta != null) {
+            headMeta.setOwningPlayer(Bukkit.getOfflinePlayer("Burpld"));
+            head.setItemMeta(headMeta);
+        }
+
+        npc.getEquipment().setHelmet(head);
+        npc.getEquipment().setChestplate(new ItemStack(Material.NETHERITE_CHESTPLATE));
+        npc.getEquipment().setLeggings(new ItemStack(Material.NETHERITE_LEGGINGS));
+        npc.getEquipment().setBoots(new ItemStack(Material.NETHERITE_BOOTS));
+
+        // 1.21.11 Official Spear
+        npc.getEquipment().setItemInMainHand(new ItemStack(Material.NETHERITE_SPEAR));
+        npc.setRightArmPose(new EulerAngle(Math.toRadians(-90), 0, 0));
+    }
+
+    private void giveLeaveItem(Player player) {
+        ItemStack barrier = new ItemStack(Material.BARRIER);
+        ItemMeta meta = barrier.getItemMeta();
+        if (meta != null) {
+            meta.displayName(Component.text("§c§lLeave Queue §7(Right-Click)"));
+            barrier.setItemMeta(meta);
+        }
+        player.getInventory().setItem(8, barrier);
+    }
+}

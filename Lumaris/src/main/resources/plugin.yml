@@ -2,14 +2,11 @@ name: Lumaris
 version: 1.0
 main: Burpld.lumaris.Lumaris
 api-version: 1.21
-
 commands:
-  spawn:
-    description: Teleports you to spawn
-    usage: /spawn
+  hub:
+    description: Teleport to the hub.
   party:
-    description: Party system commands
-    usage: /party create|invite|accept|leave|disband|chat
-  fall:
-    description: Will send you quite up
-    usage: /fall
+    description: Main party and queue command.
+  spawnnpc:
+    description: Spawn the Battle Box mannequin.
+    permission: lumaris.admin
