@@ -7,13 +7,13 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jspecify.annotations.NonNull;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
 public final class Lumaris extends JavaPlugin {
-
     // ------------------- SPAWN -------------------
     private final String WORLD_NAME = "world";
     private final double X = -97.5;
@@ -37,7 +37,7 @@ public final class Lumaris extends JavaPlugin {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, String @NonNull [] args) {
 
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cOnly players can use this command.");
@@ -54,6 +54,21 @@ public final class Lumaris extends JavaPlugin {
             Location spawnLocation = new Location(world, X, Y, Z, YAW, PITCH);
             player.teleport(spawnLocation);
             player.sendMessage("§aTeleported to spawn!");
+            return true;
+        }
+
+        if (command.getName().equalsIgnoreCase("fall")) {
+            World world = Bukkit.getWorld(WORLD_NAME);
+            if (world == null) {
+                player.sendMessage("§cTry again later");
+                return true;
+            }
+
+            Location teleportLocation = new Location(world, X, 300, Z, 0, 0);
+
+            player.setDeathScreenScore(Utility.calculateEffectiveScore(player));
+            player.teleport(teleportLocation);
+            player.sendMessage("§aTeleported to fall zone!");
             return true;
         }
 

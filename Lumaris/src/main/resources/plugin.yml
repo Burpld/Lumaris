@@ -10,3 +10,6 @@ commands:
   party:
     description: Party system commands
     usage: /party create|invite|accept|leave|disband|chat
+  fall:
+    description: Will send you quite up
+    usage: /fall
