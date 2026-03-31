@@ -1,4 +1,4 @@
-package Burpld.lumaris;
+package lumaris;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
