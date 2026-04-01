@@ -75,7 +75,7 @@ public final class Main extends JavaPlugin implements Listener {
         // --- PARTY COMMAND ---
         if (command.getName().equalsIgnoreCase("party")) {
             if (args.length == 0) {
-                player.sendMessage("§e/party <create|invite|accept|leave|queue>");
+                player.sendMessage("§e/party <create|invite|accept|leave|queue|disband>");
                 return true;
             }
 
@@ -148,9 +148,15 @@ public final class Main extends JavaPlugin implements Listener {
                     checkQueue();
                     break;
 
-                case "leave":
+                case "leave": {
                     handleLeave(player);
                     break;
+                }
+
+                case "disband": {
+                    disbandParty(player);
+                    break;
+                }
             }
             return true;
         }
@@ -260,23 +266,24 @@ public final class Main extends JavaPlugin implements Listener {
 
         player.sendMessage("§c§l(!) §cYou have left the queue.");
 
-        Player playerValue = partyMap.get(player);
+        queueList.remove(player);
+    }
 
-        // Check to see if the player leaving is a party leader.
-        // If the player's key is equal to its value, it means they are the party leader.
-        if (player.equals(playerValue)) {
-            partyMap.values().forEach(i -> {
-                if (i.equals(player)) { // If the i value is party of the user's party
-                    queueList.remove(i);
-                    partyMap.remove(i);
-                }
-
-                i.sendMessage("§c§l(!) §cParty has been disbanded.");
-            });
+    private void disbandParty(Player player) {
+        // If the value equals the key. I.e, the player is a party leader.
+        if (!partyMap.get(player).getName().equals(player.getName())) {
+            player.sendMessage("§cYou have to be the party leader to do that.");
+            return;
         }
 
-        queueList.remove(player);
-        partyMap.remove(player);
+        partyMap.values().forEach(i -> {
+            if (i.getName().equals(player.getName())) { // If the i value is party of the user's party
+                i.sendMessage("§c§l(!) §cParty has been disbanded.");
+
+                queueList.remove(i);
+                partyMap.remove(i);
+            }
+        });
     }
 
     private void broadcastQueue(String msg) {
