@@ -1,4 +1,4 @@
-package Burpld.lumaris;
+package lumaris;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -25,8 +25,7 @@ import org.bukkit.util.EulerAngle;
 
 import java.util.*;
 
-public final class Lumaris extends JavaPlugin implements Listener {
-
+public final class Main extends JavaPlugin implements Listener {
     // ------------------- CONFIG / SPAWN -------------------
     private final String WORLD_NAME = "world";
     private final double X = -97.5, Y = 178, Z = -224.5;

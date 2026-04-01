@@ -1,6 +1,6 @@
 name: Lumaris
 version: 1.0
-main: Burpld.lumaris.Lumaris
+main: lumaris.Main
 api-version: 1.21
 commands:
   hub:
