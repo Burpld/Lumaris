@@ -149,7 +149,7 @@ public final class Main extends JavaPlugin implements Listener {
                     break;
 
                 case "leave": {
-                    handleLeave(player);
+                    leaveQueue(player);
                     break;
                 }
 
@@ -245,7 +245,7 @@ public final class Main extends JavaPlugin implements Listener {
 
             if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                 if (queueList.contains(player)) {
-                    handleLeave(player);
+                    leaveQueue(player);
                 }
             }
         }
@@ -253,12 +253,11 @@ public final class Main extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        handleLeave(event.getPlayer());
+        disbandParty(event.getPlayer());
     }
 
     // ------------------- HELPERS -------------------
-
-    private void handleLeave(Player player) {
+    private void leaveQueue(Player player) {
         // Wipe client-side visuals immediately
         player.sendActionBar(Component.text(""));
         player.getInventory().setItem(8, null);
@@ -267,6 +266,19 @@ public final class Main extends JavaPlugin implements Listener {
         player.sendMessage("§c§l(!) §cYou have left the queue.");
 
         queueList.remove(player);
+
+        // If the value equals the key. I.e, the player is a party leader.
+        if (!partyMap.get(player).getName().equals(player.getName())) {
+            return;
+        }
+
+        queueList.forEach(i -> {
+            if (i.getName().equals(player.getName())) { // If the i value is party of the user's party
+                i.sendMessage("§cParty leader left the queue.");
+
+                queueList.remove(i);
+            }
+        });
     }
 
     private void disbandParty(Player player) {
