@@ -159,7 +159,7 @@ public final class Main extends JavaPlugin implements Listener {
                 }
 
                 case "luigi": {
-                    player.sendMessage("Hi");
+                    player.sendMessage("Hi 2");
                     break;
                 }
             }
@@ -272,6 +272,10 @@ public final class Main extends JavaPlugin implements Listener {
 
         queueList.remove(player);
 
+        if (partyMap.get(player) == null) {
+            return;
+        }
+
         // If the value equals the key. I.e, the player is a party leader.
         if (!partyMap.get(player).equals(player)) {
             return;
@@ -279,7 +283,7 @@ public final class Main extends JavaPlugin implements Listener {
 
         for (Player i : queueList) {
             if (i.equals(player)) { // If the i value is party of the user's party
-                i.sendMessage("§cParty leader left the queue.");
+                i.sendMessage("§c§l(!) §cParty leader left the queue.");
 
                 queueList.remove(i);
             }
@@ -287,6 +291,10 @@ public final class Main extends JavaPlugin implements Listener {
     }
 
     private void disbandParty(Player player) {
+        if (partyMap.get(player) == null) {
+            return;
+        }
+
         // If the value equals the key. I.e, the player is a party leader.
         if (!partyMap.get(player).equals(player)) {
             player.sendMessage("§cYou have to be the party leader to do that.");
