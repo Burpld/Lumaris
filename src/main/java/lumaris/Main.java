@@ -78,9 +78,11 @@ public final class Main extends JavaPlugin implements Listener {
                 return true;
             }
 
+            // The specific argument after /party which specifies what function to run
             String sub = args[0].toLowerCase();
             switch (sub) {
                 case "create":
+                    // if the player already appears in the map of people in a party
                     if (partyMap.containsKey(player)) {
                         player.sendMessage("§cAlready in a party!");
                         return true;
@@ -90,7 +92,7 @@ public final class Main extends JavaPlugin implements Listener {
                     break;
 
                 case "invite":
-                    if (args.length < 2) return true;
+                    if (args.length < 2) return true; // if the user did not add a username at the end
                     Player target = Bukkit.getPlayer(args[1]);
                     if (target == null) {
                         player.sendMessage("§cPlayer not found.");
@@ -100,22 +102,28 @@ public final class Main extends JavaPlugin implements Listener {
                         player.sendMessage("§cOnly leaders can invite.");
                         return true;
                     }
+                    // Add the player to a map of people being invited
                     inviteMap.put(target, player);
                     target.sendMessage("§c--------------------------------\n§aYou were invited to " + player.getName() + "'s party! /party accept\n§c--------------------------------");
                     player.sendMessage("§aInvitation sent.");
                     break;
 
                 case "accept":
+                    // If the accept, remove them from the pending invite map
                     Player leader = inviteMap.remove(player);
                     if (leader == null) {
                         player.sendMessage("§cNo pending invites.");
                         return true;
                     }
+                    // looking through the map (specifically through the values column), if more than
+                    // 2 people are already part of the party, say that the party is full and do not
+                    // add them to the party
                     long size = partyMap.values().stream().filter(l -> l.equals(leader)).count();
                     if (size >= 3) {
                         player.sendMessage("§cParty is full (3/3)!");
                         return true;
                     }
+                    // register the newly added player into the list of players
                     partyMap.put(player, leader);
                     player.sendMessage("§aJoined " + leader.getName() + "'s party!");
                     leader.sendMessage("§c--------------------------------\n§a" + player.getName() + " joined!\n§c--------------------------------");
