@@ -157,6 +157,11 @@ public final class Main extends JavaPlugin implements Listener {
                     disbandParty(player);
                     break;
                 }
+
+                case "luigi": {
+                    player.sendMessage("Hi");
+                    break;
+                }
             }
             return true;
         }
@@ -268,34 +273,34 @@ public final class Main extends JavaPlugin implements Listener {
         queueList.remove(player);
 
         // If the value equals the key. I.e, the player is a party leader.
-        if (!partyMap.get(player).getName().equals(player.getName())) {
+        if (!partyMap.get(player).equals(player)) {
             return;
         }
 
-        queueList.forEach(i -> {
-            if (i.getName().equals(player.getName())) { // If the i value is party of the user's party
+        for (Player i : queueList) {
+            if (i.equals(player)) { // If the i value is party of the user's party
                 i.sendMessage("§cParty leader left the queue.");
 
                 queueList.remove(i);
             }
-        });
+        }
     }
 
     private void disbandParty(Player player) {
         // If the value equals the key. I.e, the player is a party leader.
-        if (!partyMap.get(player).getName().equals(player.getName())) {
+        if (!partyMap.get(player).equals(player)) {
             player.sendMessage("§cYou have to be the party leader to do that.");
             return;
         }
 
-        partyMap.values().forEach(i -> {
-            if (i.getName().equals(player.getName())) { // If the i value is party of the user's party
+        for (Player i : partyMap.values()) {
+            if (i.equals(player)) { // If the i value is party of the user's party
                 i.sendMessage("§c§l(!) §cParty has been disbanded.");
 
                 queueList.remove(i);
                 partyMap.remove(i);
             }
-        });
+        }
     }
 
     private void broadcastQueue(String msg) {
