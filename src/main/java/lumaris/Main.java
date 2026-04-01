@@ -25,7 +25,7 @@ import org.bukkit.util.EulerAngle;
 
 import java.util.*;
 
-@SuppressWarnings("FieldCanBeLocal")
+@SuppressWarnings({"FieldCanBeLocal", "unused"})
 public final class Main extends JavaPlugin implements Listener {
     // ------------------- CONFIG / SPAWN -------------------
     private final String WORLD_NAME = "world";
@@ -33,6 +33,7 @@ public final class Main extends JavaPlugin implements Listener {
     private final float YAW = -180, PITCH = 1;
 
     // ------------------- STATE MANAGEMENT -------------------
+    // Key = specific player. Value = party leader.
     private final HashMap<Player, Player> partyMap = new HashMap<>();
     private final HashMap<Player, Player> inviteMap = new HashMap<>();
     private final List<Player> queueList = new ArrayList<>();
@@ -109,7 +110,7 @@ public final class Main extends JavaPlugin implements Listener {
                     break;
 
                 case "accept":
-                    // If the accept, remove them from the pending invite map
+                    // If they accept, remove them from the pending invite map
                     Player leader = inviteMap.remove(player);
                     if (leader == null) {
                         player.sendMessage("§cNo pending invites.");
@@ -252,16 +253,30 @@ public final class Main extends JavaPlugin implements Listener {
     // ------------------- HELPERS -------------------
 
     private void handleLeave(Player player) {
-        // 1. Instant state change
-        queueList.remove(player);
-        partyMap.remove(player);
-
-        // 2. Wipe client-side visuals immediately
+        // Wipe client-side visuals immediately
         player.sendActionBar(Component.text(""));
         player.getInventory().setItem(8, null);
         player.getInventory().remove(Material.BARRIER);
 
         player.sendMessage("§c§l(!) §cYou have left the queue.");
+
+        Player playerValue = partyMap.get(player);
+
+        // Check to see if the player leaving is a party leader.
+        // If the player's key is equal to its value, it means they are the party leader.
+        if (player.equals(playerValue)) {
+            partyMap.values().forEach(i -> {
+                if (i.equals(player)) { // If the i value is party of the user's party
+                    queueList.remove(i);
+                    partyMap.remove(i);
+                }
+
+                i.sendMessage("§c§l(!) §cParty has been disbanded.");
+            });
+        }
+
+        queueList.remove(player);
+        partyMap.remove(player);
     }
 
     private void broadcastQueue(String msg) {
