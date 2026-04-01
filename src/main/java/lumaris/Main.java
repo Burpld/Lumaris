@@ -25,6 +25,7 @@ import org.bukkit.util.EulerAngle;
 
 import java.util.*;
 
+@SuppressWarnings("FieldCanBeLocal")
 public final class Main extends JavaPlugin implements Listener {
     // ------------------- CONFIG / SPAWN -------------------
     private final String WORLD_NAME = "world";
