@@ -42,7 +42,7 @@ public final class Main extends JavaPlugin implements Listener {
 
     // --- TESTING LIMITS (Set to 1 and 2 for your solo/alt testing) ---
     private final int MIN_PLAYERS = 1;
-    private final int MAX_PLAYERS = 2;
+    private final int MAX_PLAYERS = 6;
 
     @Override
     public void onEnable() {
@@ -75,7 +75,7 @@ public final class Main extends JavaPlugin implements Listener {
         // --- PARTY COMMAND ---
         if (command.getName().equalsIgnoreCase("party")) {
             if (args.length == 0) {
-                player.sendMessage("§e/party <create|invite|accept|leave|queue|disband>");
+                player.sendMessage("§e/party <create | invite| accept | leave | queue | leavequeue | list>");
                 return true;
             }
 
@@ -148,18 +148,31 @@ public final class Main extends JavaPlugin implements Listener {
                     checkQueue();
                     break;
 
-                case "leave": {
+                case "leavequeue": {
                     leaveQueue(player);
                     break;
                 }
 
-                case "disband": {
-                    disbandParty(player);
+                case "leave": {
+                    leaveParty(player);
+                    break;
+                }
+
+                case "list": {
+                    String message = "§eParty Members:";
+                    for (Player online : Bukkit.getOnlinePlayers()) {
+                        if (player.equals(partyMap.get(online))) {
+                            message += "\n" + player.getName();
+                        }
+                    }
+
+                    player.sendMessage(message);
+
                     break;
                 }
 
                 case "luigi": {
-                    player.sendMessage("Hi 2");
+                    player.sendMessage("Hi 3");
                     break;
                 }
             }
@@ -264,9 +277,7 @@ public final class Main extends JavaPlugin implements Listener {
     // ------------------- HELPERS -------------------
     private void leaveQueue(Player player) {
         // Wipe client-side visuals immediately
-        player.sendActionBar(Component.text(""));
-        player.getInventory().setItem(8, null);
-        player.getInventory().remove(Material.BARRIER);
+        clearQueueItems(player);
 
         player.sendMessage("§c§l(!) §cYou have left the queue.");
 
@@ -277,17 +288,28 @@ public final class Main extends JavaPlugin implements Listener {
         }
 
         // If the value equals the key. I.e, the player is a party leader.
-        if (!partyMap.get(player).equals(player)) {
+        if (!isPlayerPartyLeader(player)) {
             return;
         }
 
         for (Player i : queueList) {
-            if (i.equals(player)) { // If the i value is party of the user's party
+            Player playerInQueue = partyMap.get(i);
+
+            if (i == null) continue;
+
+            if (playerInQueue.equals(player)) { // If the i value is party of the user's party
                 i.sendMessage("§c§l(!) §cParty leader left the queue.");
 
                 queueList.remove(i);
+                clearQueueItems(i);
             }
         }
+    }
+
+    private void clearQueueItems(Player player) {
+        player.sendActionBar(Component.text(""));
+        player.getInventory().setItem(8, null);
+        player.getInventory().remove(Material.BARRIER);
     }
 
     private void disbandParty(Player player) {
@@ -296,7 +318,7 @@ public final class Main extends JavaPlugin implements Listener {
         }
 
         // If the value equals the key. I.e, the player is a party leader.
-        if (!partyMap.get(player).equals(player)) {
+        if (!isPlayerPartyLeader(player)) {
             player.sendMessage("§cYou have to be the party leader to do that.");
             return;
         }
@@ -306,10 +328,29 @@ public final class Main extends JavaPlugin implements Listener {
                 i.sendMessage("§c§l(!) §cParty has been disbanded.");
 
                 queueList.remove(i);
+                clearQueueItems(player);
                 partyMap.remove(i);
             }
         }
     }
+
+    private void leaveParty(Player player) {
+        if (partyMap.get(player) == null) {
+            return;
+        }
+
+        if (isPlayerPartyLeader(player)) {
+            disbandParty(player);
+        }
+        else {
+            partyMap.remove(player);
+        }
+    }
+
+    private boolean isPlayerPartyLeader(Player player) {
+        return partyMap.get(player).equals(player);
+    }
+
 
     private void broadcastQueue(String msg) {
         for (Player p : queueList) p.sendMessage(msg);
