@@ -110,24 +110,37 @@ public final class Main extends JavaPlugin implements Listener {
                     break;
 
                 case "join", "accept":
-                    // If they accept, remove them from the pending invite map
-                    Player leader = Bukkit.getPlayer(inviteMap.remove(player.getUniqueId()));
-                    if (leader == null) {
-                        player.sendMessage("§cNo pending invites.");
+                    // 1. Check if an argument was provided (e.g., /party accept <name>)
+                    if (args.length < 2) {
+                        // Fallback: If no name is specified, try to find any pending invite for this player
+                        UUID leaderUUID = inviteMap.remove(player.getUniqueId());
+
+                        if (leaderUUID == null) {
+                            player.sendMessage("§cUsage: /party accept <player> or you have no pending invites.");
+                            return true;
+                        }
+
+                        processJoin(player, leaderUUID);
                         return true;
                     }
-                    // looking through the map (specifically through the values column), if more than
-                    // 2 people are already part of the party, say that the party is full and do not
-                    // add them to the party
-//                    long size = partyMap.values().stream().filter(l -> l.equals(leader.getUniqueId())).count();
-//                    if (size >= 3) {
-//                        player.sendMessage("§cParty is full (3/3)!");
-//                        return true;
-//                    }
-                    // register the newly added player into the list of players
-                    partyMap.put(player.getUniqueId(), leader.getUniqueId());
-                    player.sendMessage("§aJoined " + leader.getName() + "'s party!");
-                    leader.sendMessage("§c--------------------------------\n§a" + player.getName() + " joined!\n§c--------------------------------");
+
+                    // 2. If a name IS provided, find that player and check if they actually invited the sender
+                    String targetName = args[2];
+                    Player targetLeader = Bukkit.getPlayer(targetName);
+
+                    if (targetLeader == null) {
+                        player.sendMessage("§cPlayer not found.");
+                        return true;
+                    }
+
+                    // 3. Verify the invite exists from THIS specific leader
+                    // This assumes your map structure is inviteMap.get(invitee) == leader
+                    if (inviteMap.containsKey(player.getUniqueId()) && inviteMap.get(player.getUniqueId()).equals(targetLeader.getUniqueId())) {
+                        inviteMap.remove(player.getUniqueId());
+                        processJoin(player, targetLeader.getUniqueId());
+                    } else {
+                        player.sendMessage("§c" + targetLeader.getName() + " has not invited you.");
+                    }
                     break;
 
                 case "q", "queue":
@@ -141,7 +154,7 @@ public final class Main extends JavaPlugin implements Listener {
                         return true;
                     }
                     for (Player online : Bukkit.getOnlinePlayers()) {
-                        if (partyMap.get(online.getUniqueId()) != null && partyMap.get(player.getUniqueId()) != null && partyMap.get(player.getUniqueId()).equals(partyMap.get(online.getUniqueId()))) {
+                        if (partyMap.get(online.getUniqueId()) != null && player.getUniqueId().equals(partyMap.get(online.getUniqueId()))) {
                             addToQueue(online);
                         }
                     }
@@ -164,7 +177,7 @@ public final class Main extends JavaPlugin implements Listener {
                         // Check if the online player belongs to the current leader (player)
                         UUID leaderID = partyMap.get(online.getUniqueId());
 
-                        if (leaderID != null && leaderID.equals(player.getUniqueId())) {
+                        if (leaderID != null && partyMap.get(player.getUniqueId()) != null && partyMap.get(player.getUniqueId()).equals(leaderID)) {
                             message += "\n" + online.getName();
                         }
                     }
@@ -350,6 +363,26 @@ public final class Main extends JavaPlugin implements Listener {
             }
             return false;
         });
+    }
+
+    private void processJoin(Player player, UUID leaderUUID) {
+        Player leader = Bukkit.getPlayer(leaderUUID);
+
+        if (leader == null) {
+            player.sendMessage("§cThat leader is no longer online.");
+            return;
+        }
+
+        // Optional: Party size check
+        long size = partyMap.values().stream().filter(l -> l.equals(leaderUUID)).count();
+        if (size >= 2) { // 2 others + leader = 3
+            player.sendMessage("§cParty is full!");
+            return;
+        }
+
+        partyMap.put(player.getUniqueId(), leaderUUID);
+        player.sendMessage("§aJoined " + leader.getName() + "'s party!");
+        leader.sendMessage("§a" + player.getName() + " joined your party!");
     }
 
     private void clearQueueItems(Player player) {
