@@ -141,7 +141,7 @@ public final class Main extends JavaPlugin implements Listener {
                         return true;
                     }
                     for (Player online : Bukkit.getOnlinePlayers()) {
-                        if (partyMap.get(online.getUniqueId()) != null && player.getUniqueId().equals(partyMap.get(online.getUniqueId()))) {
+                        if (partyMap.get(online.getUniqueId()) != null && partyMap.get(player.getUniqueId()) != null && partyMap.get(player.getUniqueId()).equals(partyMap.get(online.getUniqueId()))) {
                             addToQueue(online);
                         }
                     }
@@ -208,7 +208,7 @@ public final class Main extends JavaPlugin implements Listener {
             }
 
             for (Player online : Bukkit.getOnlinePlayers()) {
-                if (partyMap.get(online.getUniqueId()) != null && player.getUniqueId().equals(partyMap.get(online.getUniqueId()))) {
+                if (partyMap.get(online.getUniqueId()) != null && partyMap.get(player.getUniqueId()) != null && partyMap.get(player.getUniqueId()).equals(partyMap.get(online.getUniqueId()))) {
                     online.sendMessage("§d<Party>§r " + player.getName() + ": " + message);
                 }
             }
