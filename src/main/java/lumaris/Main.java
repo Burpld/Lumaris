@@ -313,7 +313,7 @@ public final class Main extends JavaPlugin implements Listener {
     }
 
     private void disbandParty(Player player) {
-        if (partyMap.get(player) == null) {
+        if (partyMap.get(player) == null || player == null) {
             return;
         }
 
@@ -343,6 +343,7 @@ public final class Main extends JavaPlugin implements Listener {
             disbandParty(player);
         }
         else {
+            player.sendMessage("§c§l(!) §cYou left the party.");
             partyMap.remove(player);
         }
     }
