@@ -161,8 +161,11 @@ public final class Main extends JavaPlugin implements Listener {
                 case "list": {
                     String message = "§eParty Members:";
                     for (Player online : Bukkit.getOnlinePlayers()) {
-                        if (partyMap.get(online.getUniqueId()) != null && player.getUniqueId().equals(partyMap.get(online.getUniqueId()))) {
-                            message += "\n" + player.getName();
+                        // Check if the online player belongs to the current leader (player)
+                        UUID leaderID = partyMap.get(online.getUniqueId());
+
+                        if (leaderID != null && leaderID.equals(player.getUniqueId())) {
+                            message += "\n" + online.getName();
                         }
                     }
 
@@ -177,9 +180,9 @@ public final class Main extends JavaPlugin implements Listener {
                 }
 
                 case "partyleader": {
-                    if (partyMap.get(player.getUniqueId()) == null) return true;
+                    if (Bukkit.getPlayer(partyMap.get(player.getUniqueId())) == null) return true;
 
-                    player.sendMessage("Your party leader is: " + Bukkit.getPlayer(partyMap.get(player.getUniqueId())).getName());
+                    player.sendMessage("Your party leader is: " + Objects.requireNonNull(Bukkit.getPlayer(partyMap.get(player.getUniqueId()))).getName());
 
                     break;
                 }
@@ -206,7 +209,7 @@ public final class Main extends JavaPlugin implements Listener {
 
             for (Player online : Bukkit.getOnlinePlayers()) {
                 if (partyMap.get(online.getUniqueId()) != null && player.getUniqueId().equals(partyMap.get(online.getUniqueId()))) {
-                    player.sendMessage("§d<Party>§r " + player.getName() + ": " + message);
+                    online.sendMessage("§d<Party>§r " + player.getName() + ": " + message);
                 }
             }
 
