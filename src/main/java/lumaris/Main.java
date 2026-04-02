@@ -166,13 +166,18 @@ public final class Main extends JavaPlugin implements Listener {
                         }
                     }
 
-                    player.sendMessage(message);
+                    if (partyMap.get(player) == null) {
+                        player.sendMessage("§cYou are not in a party!");
+                    }
+                    else {
+                        player.sendMessage(message);
+                    }
 
                     break;
                 }
 
                 case "luigi": {
-                    player.sendMessage("Hi 3");
+                    player.sendMessage("Hi 5");
                     break;
                 }
             }
@@ -293,9 +298,11 @@ public final class Main extends JavaPlugin implements Listener {
         }
 
         for (Player i : queueList) {
+            if (i == null) continue;
+
             Player playerInQueue = partyMap.get(i);
 
-            if (i == null) continue;
+            if (playerInQueue == null) continue;
 
             if (playerInQueue.equals(player)) { // If the i value is party of the user's party
                 i.sendMessage("§c§l(!) §cParty leader left the queue.");
