@@ -176,6 +176,14 @@ public final class Main extends JavaPlugin implements Listener {
                     break;
                 }
 
+                case "partyleader": {
+                    if (partyMap.get(player.getUniqueId()) == null) return true;
+
+                    player.sendMessage("Your party leader is: " + Bukkit.getPlayer(partyMap.get(player.getUniqueId())).getName());
+
+                    break;
+                }
+
                 case "luigi": {
                     player.sendMessage("§o§b§lTest Message");
                     break;
