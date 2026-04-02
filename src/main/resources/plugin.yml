@@ -10,3 +10,5 @@ commands:
   spawnnpc:
     description: Spawn the Battle Box mannequin.
     permission: lumaris.admin
+  pc:
+    description: Chat with your party.

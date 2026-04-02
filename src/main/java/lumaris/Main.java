@@ -184,9 +184,7 @@ public final class Main extends JavaPlugin implements Listener {
             return true;
         }
 
-        if (command.getName().equalsIgnoreCase("partychat") ||
-                command.getName().equalsIgnoreCase("pchat") ||
-                command.getName().equalsIgnoreCase("pc")) {
+        if (command.getName().equalsIgnoreCase("pc")) {
             if (args.length == 0) {
                 return true;
             }
@@ -321,20 +319,19 @@ public final class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        for (Player i : queueList) {
-            if (i == null) continue;
+        queueList.removeIf(i -> {
+            if (i == null) return false;
 
             Player playerInQueue = partyMap.get(i);
+            if (playerInQueue == null) return false;
 
-            if (playerInQueue == null) continue;
-
-            if (playerInQueue.equals(player)) { // If the i value is party of the user's party
+            if (playerInQueue.equals(player)) {
                 i.sendMessage("§c§l(!) §cParty leader left the queue.");
-
-                queueList.remove(i);
                 clearQueueItems(i);
+                return true; // This tells Java to remove "i" from queueList
             }
-        }
+            return false;
+        });
     }
 
     private void clearQueueItems(Player player) {
@@ -354,13 +351,25 @@ public final class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        for (Player i : partyMap.values()) {
-            if (i.equals(player)) { // If the i value is party of the user's party
-                i.sendMessage("§c§l(!) §cParty has been disbanded.");
+        Iterator<Map.Entry<Player, Player>> it = partyMap.entrySet().iterator();
 
-                queueList.remove(i);
-                clearQueueItems(player);
-                partyMap.remove(i);
+        while (it.hasNext()) {
+            Map.Entry<Player, Player> entry = it.next();
+            Player member = entry.getKey();
+            Player leader = entry.getValue();
+
+            // Check if the leader of this entry is the player who left/disbanded
+            if (leader.equals(player)) {
+                member.sendMessage("§c§l(!) §cParty has been disbanded.");
+
+                // 1. Remove from the queue list
+                queueList.remove(member);
+
+                // 2. Clear items for the member
+                clearQueueItems(member);
+
+                // 3. Safely remove the current entry from the partyMap
+                it.remove();
             }
         }
     }
