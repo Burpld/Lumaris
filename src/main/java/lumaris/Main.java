@@ -75,14 +75,14 @@ public final class Main extends JavaPlugin implements Listener {
         // --- PARTY COMMAND ---
         if (command.getName().equalsIgnoreCase("party")) {
             if (args.length == 0) {
-                player.sendMessage("§e/party <create | invite| accept | leave | queue | leavequeue | list>");
+                player.sendMessage("§e/party <new | add | accept/join | queue/q | leavequeue/dq | leave | list>");
                 return true;
             }
 
             // The specific argument after /party which specifies what function to run
             String sub = args[0].toLowerCase();
             switch (sub) {
-                case "create":
+                case "new":
                     // if the player already appears in the map of people in a party
                     if (partyMap.containsKey(player)) {
                         player.sendMessage("§cAlready in a party!");
@@ -92,7 +92,7 @@ public final class Main extends JavaPlugin implements Listener {
                     player.sendMessage("§aParty created!");
                     break;
 
-                case "invite":
+                case "add":
                     if (args.length < 2) return true; // if the user did not add a username at the end
                     Player target = Bukkit.getPlayer(args[1]);
                     if (target == null) {
@@ -109,7 +109,7 @@ public final class Main extends JavaPlugin implements Listener {
                     player.sendMessage("§aInvitation sent.");
                     break;
 
-                case "accept":
+                case "join", "accept":
                     // If they accept, remove them from the pending invite map
                     Player leader = inviteMap.remove(player);
                     if (leader == null) {
@@ -130,7 +130,7 @@ public final class Main extends JavaPlugin implements Listener {
                     leader.sendMessage("§c--------------------------------\n§a" + player.getName() + " joined!\n§c--------------------------------");
                     break;
 
-                case "queue":
+                case "q", "queue":
                     if (!partyMap.containsKey(player)) {
                         addToQueue(player);
                         checkQueue();
@@ -148,7 +148,7 @@ public final class Main extends JavaPlugin implements Listener {
                     checkQueue();
                     break;
 
-                case "leavequeue": {
+                case "dq", "leavequeue": {
                     leaveQueue(player);
                     break;
                 }
@@ -177,7 +177,7 @@ public final class Main extends JavaPlugin implements Listener {
                 }
 
                 case "luigi": {
-                    player.sendMessage("Hi 5");
+                    player.sendMessage("§o§b§lTest Message");
                     break;
                 }
             }
