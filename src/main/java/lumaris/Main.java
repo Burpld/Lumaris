@@ -119,11 +119,11 @@ public final class Main extends JavaPlugin implements Listener {
                     // looking through the map (specifically through the values column), if more than
                     // 2 people are already part of the party, say that the party is full and do not
                     // add them to the party
-                    long size = partyMap.values().stream().filter(l -> l.equals(leader.getUniqueId())).count() + 1;
-                    if (size >= 3) {
-                        player.sendMessage("§cParty is full (3/3)!");
-                        return true;
-                    }
+//                    long size = partyMap.values().stream().filter(l -> l.equals(leader.getUniqueId())).count();
+//                    if (size >= 3) {
+//                        player.sendMessage("§cParty is full (3/3)!");
+//                        return true;
+//                    }
                     // register the newly added player into the list of players
                     partyMap.put(player.getUniqueId(), leader.getUniqueId());
                     player.sendMessage("§aJoined " + leader.getName() + "'s party!");
