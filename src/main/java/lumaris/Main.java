@@ -35,7 +35,7 @@ public final class Main extends JavaPlugin implements Listener {
     // ------------------- STATE MANAGEMENT -------------------
     // Key = specific player. Value = party leader.
     private final HashMap<UUID, UUID> partyMap = new HashMap<>();
-    private final HashMap<UUID, UUID> inviteMap = new HashMap<>();
+    private final HashMap<UUID, Set<UUID>> inviteMap = new HashMap<>();
     private final List<UUID> queueList = new ArrayList<>();
 
     private BukkitTask countdownTask = null;
@@ -104,27 +104,17 @@ public final class Main extends JavaPlugin implements Listener {
                         return true;
                     }
                     // Add the player to a map of people being invited
-                    inviteMap.put(target.getUniqueId(), player.getUniqueId());
+                    inviteMap.computeIfAbsent(target.getUniqueId(), k -> new HashSet<>()).add(player.getUniqueId());
                     target.sendMessage("§c--------------------------------\n§aYou were invited to " + player.getName() + "'s party! /party accept\n§c--------------------------------");
                     player.sendMessage("§aInvitation sent.");
                     break;
 
                 case "join", "accept":
-                    // 1. Check if an argument was provided (e.g., /party accept <name>)
                     if (args.length == 1) {
-                        // Fallback: If no name is specified, try to find any pending invite for this player
-                        UUID leaderUUID = inviteMap.remove(player.getUniqueId());
-
-                        if (leaderUUID == null) {
-                            player.sendMessage("§cUsage: /party accept <player> or you have no pending invites.");
-                            return true;
-                        }
-
-                        processJoin(player, leaderUUID);
+                        player.sendMessage("§cUsage: /party accept <playername>");
                         return true;
                     }
 
-                    // 2. If a name IS provided, find that player and check if they actually invited the sender
                     String targetName = args[1];
                     Player targetLeader = Bukkit.getPlayer(targetName);
 
@@ -133,13 +123,27 @@ public final class Main extends JavaPlugin implements Listener {
                         return true;
                     }
 
-                    // 3. Verify the invite exists from THIS specific leader
-                    // This assumes your map structure is inviteMap.get(invitee) == leader
-                    if (inviteMap.containsKey(player.getUniqueId()) && inviteMap.get(player.getUniqueId()).equals(targetLeader.getUniqueId())) {
-                        inviteMap.remove(player.getUniqueId());
-                        processJoin(player, targetLeader.getUniqueId());
-                    } else {
-                        player.sendMessage("§c" + targetLeader.getName() + " has not invited you.");
+                    UUID playerUUID = player.getUniqueId();
+                    UUID leaderUUID = targetLeader.getUniqueId();
+
+                    // 1. Get the set of all people who invited this player
+                    Set<UUID> invites = inviteMap.get(playerUUID);
+
+                    // 2. Check if the specific target is in that set
+                    if (invites != null && invites.contains(leaderUUID)) {
+
+                        // Success! Remove this specific invite
+                        invites.remove(leaderUUID);
+                        if (invites.isEmpty()) inviteMap.remove(playerUUID);
+
+                        // Add to party
+                        partyMap.put(playerUUID, leaderUUID);
+
+                        player.sendMessage("§aJoined " + targetLeader.getName() + "'s party!");
+                        targetLeader.sendMessage("§a" + player.getName() + " joined!");
+                    }
+                    else {
+                        player.sendMessage("§cYou don't have a pending invite from " + targetLeader.getName() + ".");
                     }
                     break;
 
