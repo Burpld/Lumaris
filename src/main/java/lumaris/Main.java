@@ -111,7 +111,7 @@ public final class Main extends JavaPlugin implements Listener {
 
                 case "join", "accept":
                     // 1. Check if an argument was provided (e.g., /party accept <name>)
-                    if (args.length < 2) {
+                    if (args.length == 1) {
                         // Fallback: If no name is specified, try to find any pending invite for this player
                         UUID leaderUUID = inviteMap.remove(player.getUniqueId());
 
@@ -125,7 +125,7 @@ public final class Main extends JavaPlugin implements Listener {
                     }
 
                     // 2. If a name IS provided, find that player and check if they actually invited the sender
-                    String targetName = args[2];
+                    String targetName = args[1];
                     Player targetLeader = Bukkit.getPlayer(targetName);
 
                     if (targetLeader == null) {
