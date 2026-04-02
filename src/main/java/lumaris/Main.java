@@ -73,7 +73,7 @@ public final class Main extends JavaPlugin implements Listener {
         }
 
         // --- PARTY COMMAND ---
-        if (command.getName().equalsIgnoreCase("party")) {
+        if (command.getName().equalsIgnoreCase("party") || command.getName().equalsIgnoreCase("p")) {
             if (args.length == 0) {
                 player.sendMessage("§e/party <new | add | accept/join | queue/q | leavequeue/dq | leave | list>");
                 return true;
@@ -183,6 +183,30 @@ public final class Main extends JavaPlugin implements Listener {
             }
             return true;
         }
+
+        if (command.getName().equalsIgnoreCase("partychat") ||
+                command.getName().equalsIgnoreCase("pchat") ||
+                command.getName().equalsIgnoreCase("pc")) {
+            if (args.length == 0) {
+                return true;
+            }
+
+            String message = "";
+            for (String i : args) {
+                if (i == null) continue;
+
+                message += i + " ";
+            }
+
+            for (Player online : Bukkit.getOnlinePlayers()) {
+                if (player.equals(partyMap.get(online))) {
+                    player.sendMessage("§d<Party>§r " + player.getName() + ": " + message);
+                }
+            }
+
+            return true;
+        }
+
         return false;
     }
 
