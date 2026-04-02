@@ -34,9 +34,9 @@ public final class Main extends JavaPlugin implements Listener {
 
     // ------------------- STATE MANAGEMENT -------------------
     // Key = specific player. Value = party leader.
-    private final HashMap<Player, Player> partyMap = new HashMap<>();
-    private final HashMap<Player, Player> inviteMap = new HashMap<>();
-    private final List<Player> queueList = new ArrayList<>();
+    private final HashMap<UUID, UUID> partyMap = new HashMap<>();
+    private final HashMap<UUID, UUID> inviteMap = new HashMap<>();
+    private final List<UUID> queueList = new ArrayList<>();
 
     private BukkitTask countdownTask = null;
 
@@ -84,11 +84,11 @@ public final class Main extends JavaPlugin implements Listener {
             switch (sub) {
                 case "new":
                     // if the player already appears in the map of people in a party
-                    if (partyMap.containsKey(player)) {
+                    if (partyMap.containsKey(player.getUniqueId())) {
                         player.sendMessage("§cAlready in a party!");
                         return true;
                     }
-                    partyMap.put(player, player);
+                    partyMap.put(player.getUniqueId(), player.getUniqueId());
                     player.sendMessage("§aParty created!");
                     break;
 
@@ -99,19 +99,19 @@ public final class Main extends JavaPlugin implements Listener {
                         player.sendMessage("§cPlayer not found.");
                         return true;
                     }
-                    if (!player.equals(partyMap.get(player))) {
+                    if (!isPlayerPartyLeader(player)) {
                         player.sendMessage("§cOnly leaders can invite.");
                         return true;
                     }
                     // Add the player to a map of people being invited
-                    inviteMap.put(target, player);
+                    inviteMap.put(target.getUniqueId(), player.getUniqueId());
                     target.sendMessage("§c--------------------------------\n§aYou were invited to " + player.getName() + "'s party! /party accept\n§c--------------------------------");
                     player.sendMessage("§aInvitation sent.");
                     break;
 
                 case "join", "accept":
                     // If they accept, remove them from the pending invite map
-                    Player leader = inviteMap.remove(player);
+                    Player leader = Bukkit.getPlayer(inviteMap.remove(player.getUniqueId()));
                     if (leader == null) {
                         player.sendMessage("§cNo pending invites.");
                         return true;
@@ -119,29 +119,29 @@ public final class Main extends JavaPlugin implements Listener {
                     // looking through the map (specifically through the values column), if more than
                     // 2 people are already part of the party, say that the party is full and do not
                     // add them to the party
-                    long size = partyMap.values().stream().filter(l -> l.equals(leader)).count();
+                    long size = partyMap.values().stream().filter(l -> l.equals(leader.getUniqueId())).count() + 1;
                     if (size >= 3) {
                         player.sendMessage("§cParty is full (3/3)!");
                         return true;
                     }
                     // register the newly added player into the list of players
-                    partyMap.put(player, leader);
+                    partyMap.put(player.getUniqueId(), leader.getUniqueId());
                     player.sendMessage("§aJoined " + leader.getName() + "'s party!");
                     leader.sendMessage("§c--------------------------------\n§a" + player.getName() + " joined!\n§c--------------------------------");
                     break;
 
                 case "q", "queue":
-                    if (!partyMap.containsKey(player)) {
+                    if (!partyMap.containsKey(player.getUniqueId())) {
                         addToQueue(player);
                         checkQueue();
                         return true;
                     }
-                    if (!player.equals(partyMap.get(player))) {
+                    if (!isPlayerPartyLeader(player)) {
                         player.sendMessage("§cOnly your party leader can join the queue!");
                         return true;
                     }
                     for (Player online : Bukkit.getOnlinePlayers()) {
-                        if (partyMap.get(online) != null && player.equals(partyMap.get(online))) {
+                        if (partyMap.get(online.getUniqueId()) != null && player.getUniqueId().equals(partyMap.get(online.getUniqueId()))) {
                             addToQueue(online);
                         }
                     }
@@ -161,12 +161,12 @@ public final class Main extends JavaPlugin implements Listener {
                 case "list": {
                     String message = "§eParty Members:";
                     for (Player online : Bukkit.getOnlinePlayers()) {
-                        if (partyMap.get(online) != null && player.equals(partyMap.get(online))) {
+                        if (partyMap.get(online.getUniqueId()) != null && player.getUniqueId().equals(partyMap.get(online.getUniqueId()))) {
                             message += "\n" + player.getName();
                         }
                     }
 
-                    if (partyMap.get(player) == null) {
+                    if (partyMap.get(player.getUniqueId()) == null) {
                         player.sendMessage("§cYou are not in a party!");
                     }
                     else {
@@ -197,7 +197,7 @@ public final class Main extends JavaPlugin implements Listener {
             }
 
             for (Player online : Bukkit.getOnlinePlayers()) {
-                if (partyMap.get(online) != null && player.equals(partyMap.get(online))) {
+                if (partyMap.get(online.getUniqueId()) != null && player.getUniqueId().equals(partyMap.get(online.getUniqueId()))) {
                     player.sendMessage("§d<Party>§r " + player.getName() + ": " + message);
                 }
             }
@@ -211,8 +211,8 @@ public final class Main extends JavaPlugin implements Listener {
     // ------------------- MATCHMAKING LOGIC -------------------
 
     private void addToQueue(Player player) {
-        if (!queueList.contains(player)) {
-            queueList.add(player);
+        if (!queueList.contains(player.getUniqueId())) {
+            queueList.add(player.getUniqueId());
             player.sendMessage("§aYou are now in the queue!");
             giveLeaveItem(player);
             startQueueTimer(player);
@@ -256,7 +256,11 @@ public final class Main extends JavaPlugin implements Listener {
             countdownTask = null;
         }
         broadcastQueue("§6§lGAME STARTING!");
-        for (Player p : queueList) {
+        for (UUID u : queueList) {
+            Player p = Bukkit.getPlayer(u);
+
+            if (p == null) return;
+
             p.getInventory().remove(Material.BARRIER);
             p.getInventory().setItem(8, null);
             p.sendActionBar(Component.text(""));
@@ -272,7 +276,7 @@ public final class Main extends JavaPlugin implements Listener {
             event.setCancelled(true);
             Player player = event.getPlayer();
 
-            if (partyMap.containsKey(player) && !player.equals(partyMap.get(player))) {
+            if (partyMap.containsKey(player.getUniqueId()) && !player.getUniqueId().equals(partyMap.get(player.getUniqueId()))) {
                 player.sendMessage("§cOnly your party leader can join the queue!");
             } else {
                 player.performCommand("party queue");
@@ -289,7 +293,7 @@ public final class Main extends JavaPlugin implements Listener {
             event.setCancelled(true); // Stop placement
 
             if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                if (queueList.contains(player)) {
+                if (queueList.contains(player.getUniqueId())) {
                     leaveQueue(player);
                 }
             }
@@ -308,9 +312,9 @@ public final class Main extends JavaPlugin implements Listener {
 
         player.sendMessage("§c§l(!) §cYou have left the queue.");
 
-        queueList.remove(player);
+        queueList.remove(player.getUniqueId());
 
-        if (partyMap.get(player) == null) {
+        if (partyMap.get(player.getUniqueId()) == null) {
             return;
         }
 
@@ -322,13 +326,16 @@ public final class Main extends JavaPlugin implements Listener {
         queueList.removeIf(i -> {
             if (i == null) return false;
 
-            Player playerInQueue = partyMap.get(i);
+            Player playerInQueue = Bukkit.getPlayer(partyMap.get(i));
             if (playerInQueue == null) return false;
 
             if (playerInQueue.equals(player)) {
-                i.sendMessage("§c§l(!) §cParty leader left the queue.");
-                clearQueueItems(i);
-                return true; // This tells Java to remove "i" from queueList
+                Player toKick = Bukkit.getPlayer(i);
+                if (toKick != null)  {
+                    toKick.sendMessage("§c§l(!) §cParty leader left the queue.");
+                    clearQueueItems(toKick);
+                    return true; // This tells Java to remove "i" from queueList
+                }
             }
             return false;
         });
@@ -341,7 +348,7 @@ public final class Main extends JavaPlugin implements Listener {
     }
 
     private void disbandParty(Player player) {
-        if (partyMap.get(player) == null || player == null) {
+        if (player == null || partyMap.get(player.getUniqueId()) == null) {
             return;
         }
 
@@ -351,19 +358,21 @@ public final class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        Iterator<Map.Entry<Player, Player>> it = partyMap.entrySet().iterator();
+        Iterator<Map.Entry<UUID, UUID>> it = partyMap.entrySet().iterator();
 
         while (it.hasNext()) {
-            Map.Entry<Player, Player> entry = it.next();
-            Player member = entry.getKey();
-            Player leader = entry.getValue();
+            Map.Entry<UUID, UUID> entry = it.next();
+            Player member = Bukkit.getPlayer(entry.getKey());
+            Player leader = Bukkit.getPlayer(entry.getValue());
+
+            if (member == null || leader == null) continue;
 
             // Check if the leader of this entry is the player who left/disbanded
             if (leader.equals(player)) {
                 member.sendMessage("§c§l(!) §cParty has been disbanded.");
 
                 // 1. Remove from the queue list
-                queueList.remove(member);
+                queueList.remove(member.getUniqueId());
 
                 // 2. Clear items for the member
                 clearQueueItems(member);
@@ -375,7 +384,7 @@ public final class Main extends JavaPlugin implements Listener {
     }
 
     private void leaveParty(Player player) {
-        if (partyMap.get(player) == null) {
+        if (partyMap.get(player.getUniqueId()) == null) {
             return;
         }
 
@@ -384,17 +393,23 @@ public final class Main extends JavaPlugin implements Listener {
         }
         else {
             player.sendMessage("§c§l(!) §cYou left the party.");
-            partyMap.remove(player);
+            partyMap.remove(player.getUniqueId());
         }
     }
 
     private boolean isPlayerPartyLeader(Player player) {
-        return partyMap.get(player).equals(player);
+        return partyMap.get(player.getUniqueId()).equals(player.getUniqueId());
     }
 
 
     private void broadcastQueue(String msg) {
-        for (Player p : queueList) p.sendMessage(msg);
+        for (UUID u : queueList) {
+            Player p = Bukkit.getPlayer(u);
+
+            if (p == null) continue;
+
+            p.sendMessage(msg);
+        }
     }
 
     private void startQueueTimer(Player player) {
@@ -403,7 +418,7 @@ public final class Main extends JavaPlugin implements Listener {
             @Override
             public void run() {
                 // If they left the queue, clear and stop task
-                if (!queueList.contains(player)) {
+                if (!queueList.contains(player.getUniqueId())) {
                     player.sendActionBar(Component.text(""));
                     this.cancel();
                     return;
