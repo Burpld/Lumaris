@@ -1,12 +1,13 @@
 package lumaris;
 
+import lumaris.command.Hub;
+import lumaris.command.SpawnNPC;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -17,13 +18,12 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.EulerAngle;
 
 import java.util.*;
+import java.util.logging.Level;
 
 @SuppressWarnings({"FieldCanBeLocal", "unused"})
 public final class Main extends JavaPlugin implements Listener {
@@ -48,29 +48,28 @@ public final class Main extends JavaPlugin implements Listener {
     public void onEnable() {
         getServer().getPluginManager().registerEvents(this, this);
         getLogger().info("Lumaris 1.21.11 Systems Enabled!");
+
+        PluginCommand hubCommand = getCommand("hub");
+        PluginCommand spawnNPCCommand = getCommand("spawnnpc");
+
+        if (hubCommand != null) {
+            hubCommand.setExecutor(new Hub());
+        }
+        else {
+            getLogger().log(Level.WARNING, "Hub is not a valid command");
+        }
+
+        if (spawnNPCCommand != null) {
+            spawnNPCCommand.setExecutor(new SpawnNPC());
+        }
+        else {
+            getLogger().log(Level.WARNING, "Spawn NPC is not a valid command");
+        }
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) return true;
-
-        // --- HUB COMMAND ---
-        if (command.getName().equalsIgnoreCase("hub")) {
-            World world = Bukkit.getWorld(WORLD_NAME);
-            if (world != null) {
-                player.teleport(new Location(world, X, Y, Z, YAW, PITCH));
-                player.sendMessage("§aTeleported to Hub!");
-            }
-            return true;
-        }
-
-        // --- SPAWN NPC COMMAND ---
-        if (command.getName().equalsIgnoreCase("spawnnpc")) {
-            if (!player.isOp()) return true;
-            spawnMannequin(player.getLocation());
-            player.sendMessage("§aBattle Box Mannequin spawned!");
-            return true;
-        }
 
         // --- PARTY COMMAND ---
         if (command.getName().equalsIgnoreCase("party") || command.getName().equalsIgnoreCase("p")) {
@@ -474,33 +473,6 @@ public final class Main extends JavaPlugin implements Listener {
                 player.sendActionBar(Component.text("§aQueued! §7(" + seconds++ + "s) §e[Right-Click to Leave]"));
             }
         }.runTaskTimer(this, 0L, 20L);
-    }
-
-    private void spawnMannequin(Location loc) {
-        ArmorStand npc = loc.getWorld().spawn(loc, ArmorStand.class);
-        npc.setGravity(false);
-        npc.setInvulnerable(true);
-        npc.setArms(true);
-        npc.setBasePlate(false);
-        npc.addScoreboardTag("battlebox");
-        npc.setCustomNameVisible(true);
-        npc.customName(Component.text("§6§lBATTLE BOX §7[Click to Play]"));
-
-        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-        SkullMeta headMeta = (SkullMeta) head.getItemMeta();
-        if (headMeta != null) {
-            headMeta.setOwningPlayer(Bukkit.getOfflinePlayer("Burpld"));
-            head.setItemMeta(headMeta);
-        }
-
-        npc.getEquipment().setHelmet(head);
-        npc.getEquipment().setChestplate(new ItemStack(Material.NETHERITE_CHESTPLATE));
-        npc.getEquipment().setLeggings(new ItemStack(Material.NETHERITE_LEGGINGS));
-        npc.getEquipment().setBoots(new ItemStack(Material.NETHERITE_BOOTS));
-
-        // 1.21.11 Official Spear
-        npc.getEquipment().setItemInMainHand(new ItemStack(Material.NETHERITE_SPEAR));
-        npc.setRightArmPose(new EulerAngle(Math.toRadians(-90), 0, 0));
     }
 
     private void giveLeaveItem(Player player) {
