@@ -81,6 +81,11 @@ class Party(private val plugin: Main) : Listener, CommandExecutor, TabCompleter 
                     return true
                 }
 
+                if (target == sender) {
+                    sender.sendMessage("§cYou are already in the party silly!")
+                    return true
+                }
+
                 // Add the player to a map of people being invited
                 inviteMap.getOrPut(target.uniqueId) { hashSetOf() }.add(sender.uniqueId)
                 target.sendMessage("§c--------------------------------\n§aYou were invited to ${sender.name}'s party! /party accept\n§c--------------------------------")
@@ -151,7 +156,7 @@ class Party(private val plugin: Main) : Listener, CommandExecutor, TabCompleter 
             }
 
             "leave" -> {
-                leaveQueue(sender)
+                leaveParty(sender)
             }
 
             "list" -> {
@@ -322,7 +327,8 @@ class Party(private val plugin: Main) : Listener, CommandExecutor, TabCompleter 
 
             if (partyMap.containsKey(player.uniqueId) && player.uniqueId != partyMap[player.uniqueId]) {
                 player.sendMessage("§cOnly your party leader can join the queue!")
-            } else {
+            }
+            else {
                 player.performCommand("party queue")
             }
         }

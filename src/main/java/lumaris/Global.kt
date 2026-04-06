@@ -10,6 +10,6 @@ object Global {
     const val SPAWN_PITCH: Float = 1f
 
     // Party Config
-    const val MIN_PLAYERS_QUEUED: Int = 1
+    const val MIN_PLAYERS_QUEUED: Int = 2
     const val MAX_PLAYERS_QUEUED: Int = 6
 }
