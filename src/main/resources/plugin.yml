@@ -1,5 +1,5 @@
 name: Lumaris
-version: 1.0
+version: 1.1
 main: lumaris.Main
 api-version: 1.21
 commands:
@@ -7,10 +7,11 @@ commands:
     description: Teleport to the hub.
   party:
     description: Main party and queue command.
-    aliases: p
+    aliases: [p]
     usage: /party <new|add|accept/join|queue/q|leavequeue/dq|leave|list>
   spawnnpc:
     description: Spawn the Battle Box mannequin.
     permission: lumaris.admin
-  pc:
+  partychat:
     description: Chat with your party.
+    aliases: [pc]
