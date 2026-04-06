@@ -7,9 +7,6 @@ import lumaris.command.SpawnNPC;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.*;
-import java.util.logging.Level;
-
 @SuppressWarnings("unused")
 public final class Main extends JavaPlugin {
     @Override
@@ -40,6 +37,7 @@ public final class Main extends JavaPlugin {
 
         if (partyCommand != null) {
             partyCommand.setExecutor(partySystem);
+            partyCommand.setTabCompleter(partySystem);
         }
         else {
             getLogger().warning("Party is not a valid command");

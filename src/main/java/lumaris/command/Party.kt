@@ -8,6 +8,7 @@ import org.bukkit.Material
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
+import org.bukkit.command.TabCompleter
 import org.bukkit.entity.ArmorStand
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -21,13 +22,26 @@ import org.bukkit.scheduler.BukkitRunnable
 import org.bukkit.scheduler.BukkitTask
 import java.util.*
 
-class Party(private val plugin: Main) : Listener, CommandExecutor {
+class Party(private val plugin: Main) : Listener, CommandExecutor, TabCompleter {
     // Key = specific player. Value = party leader.
     private val partyMap = hashMapOf<UUID, UUID>()
     private val inviteMap = hashMapOf<UUID, MutableSet<UUID>>()
     private val queueList = mutableListOf<UUID>()
 
     private var countdownTask: BukkitTask? = null
+
+    override fun onTabComplete(
+        sender: CommandSender,
+        command: Command,
+        alias: String,
+        args: Array<String>
+    ): List<String>? {
+        if (args.size == 1) {
+            return listOf("new", "add", "accept", "queue", "dequeue", "leave", "list", "kick", "promote");
+        }
+
+        return null;
+    }
 
     override fun onCommand(
         sender: CommandSender,
@@ -38,7 +52,7 @@ class Party(private val plugin: Main) : Listener, CommandExecutor {
         if (sender !is Player) return true
 
         if (args.isEmpty()) {
-            sender.sendMessage("§e/party <new | add | accept | queue | dequeue | leave | list>")
+            sender.sendMessage("§e/party <new | add | accept | queue | dequeue | leave | list | kick | promote>")
             return true
         }
 

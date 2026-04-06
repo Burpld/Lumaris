@@ -8,7 +8,7 @@ commands:
   party:
     description: Main party and queue command.
     aliases: [p]
-    usage: /party <new|add|accept/join|queue/q|leavequeue/dq|leave|list>
+    usage: /party <new|add|accept/join|queue/q|leavequeue/dq|leave|list|kick|promote>
   spawnnpc:
     description: Spawn the Battle Box mannequin.
     permission: lumaris.admin
