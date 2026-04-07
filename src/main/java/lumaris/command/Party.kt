@@ -354,7 +354,9 @@ class Party(private val plugin: Main) : Listener, CommandExecutor, TabCompleter 
     @EventHandler
     @Suppress("unused")
     fun onQuit(event: PlayerQuitEvent) {
-        leaveParty(event.getPlayer())
+        leaveParty(event.player)
+        leaveQueue(event.player)
+        inviteMap.remove(event.player.uniqueId)
     }
 
     // ------------------- HELPERS -------------------
