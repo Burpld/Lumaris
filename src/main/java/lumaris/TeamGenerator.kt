@@ -52,10 +52,17 @@ class TeamGenerator(private val queueList: MutableList<UUID>, private val partyM
     }
 
     private fun getTeamWithFewerPlayers(exclude: TeamColour? = null): TeamColour {
-        return TeamColour.entries
+        val teamsWithSizes = TeamColour.entries
             .filter { it != exclude }
-            .minByOrNull { getTeamSize(it) }
-            ?: TeamColour.entries.first()
+            .map { it to getTeamSize(it) }
+
+        val minSize = teamsWithSizes.minOfOrNull { it.second }
+            ?: return TeamColour.entries.first()
+
+        return teamsWithSizes
+            .filter { it.second == minSize }
+            .random()
+            .first
     }
 
     private fun getTeamSize(team: TeamColour): Int {
