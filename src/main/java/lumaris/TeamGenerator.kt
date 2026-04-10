@@ -48,7 +48,7 @@ class TeamGenerator(private val queueList: MutableList<UUID>, private val partyM
 
         val playerTeam = teamMap[player.uniqueId]!!
 
-        player.sendMessage("§l§aYou are on team: ${playerTeam.minecraftName}.")
+        player.sendMessage("§a§lYou are on team: ${playerTeam.minecraftName}.")
     }
 
     private fun getTeamWithFewerPlayers(exclude: TeamColour? = null): TeamColour {

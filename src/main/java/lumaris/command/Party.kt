@@ -1,5 +1,6 @@
 package lumaris.command
 
+import lumaris.GameManager
 import lumaris.Global
 import lumaris.Main
 import lumaris.TeamGenerator
@@ -31,7 +32,7 @@ class Party(private val plugin: Main) : Listener, CommandExecutor, TabCompleter 
 
     private var countdownTask: BukkitTask? = null
 
-    private val teamGenerator = TeamGenerator(queueList, partyMap)
+    private val teamList = mutableListOf<TeamGenerator>()
 
     override fun onTabComplete(
         sender: CommandSender,
@@ -318,11 +319,15 @@ class Party(private val plugin: Main) : Listener, CommandExecutor, TabCompleter 
             p.sendActionBar(Component.text(""))
         }
 
-        teamGenerator.assignTeams()
+        val game = GameManager(queueList, partyMap)
+
+        game.teamGenerator.assignTeams()
 
         for (queuedPlayer in queueList) {
-            teamGenerator.messageTeam(Bukkit.getPlayer(queuedPlayer))
+            game.teamGenerator.messageTeam(Bukkit.getPlayer(queuedPlayer))
         }
+
+        GameManager.runningGames.add(game)
 
         queueList.clear()
     }
