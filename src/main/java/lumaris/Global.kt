@@ -12,4 +12,7 @@ object Global {
     // Party Config
     const val MIN_PLAYERS_QUEUED: Int = 2
     const val MAX_PLAYERS_QUEUED: Int = 6
+
+    // Game Config
+    const val MAX_TEAM_SIZE: Int = 5
 }

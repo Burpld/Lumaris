@@ -315,6 +315,8 @@ class Party(private val plugin: Main) : Listener, CommandExecutor, TabCompleter 
             p.sendActionBar(Component.text(""))
         }
         queueList.clear()
+
+
     }
 
     // ------------------- LISTENERS -------------------
