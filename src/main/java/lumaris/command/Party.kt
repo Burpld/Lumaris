@@ -2,6 +2,7 @@ package lumaris.command
 
 import lumaris.Global
 import lumaris.Main
+import lumaris.TeamGenerator
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -29,6 +30,8 @@ class Party(private val plugin: Main) : Listener, CommandExecutor, TabCompleter 
     private val queueList = mutableListOf<UUID>()
 
     private var countdownTask: BukkitTask? = null
+
+    private val teamGenerator = TeamGenerator(queueList, partyMap)
 
     override fun onTabComplete(
         sender: CommandSender,
@@ -314,9 +317,14 @@ class Party(private val plugin: Main) : Listener, CommandExecutor, TabCompleter 
             p.inventory.setItem(8, null)
             p.sendActionBar(Component.text(""))
         }
+
+        teamGenerator.assignTeams()
+
+        for (queuedPlayer in queueList) {
+            teamGenerator.messageTeam(Bukkit.getPlayer(queuedPlayer))
+        }
+
         queueList.clear()
-
-
     }
 
     // ------------------- LISTENERS -------------------

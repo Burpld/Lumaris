@@ -1,13 +1,13 @@
-package lumaris.listener
+package lumaris
 
 import lumaris.Global.MAX_TEAM_SIZE
-import org.bukkit.event.Listener
+import org.bukkit.entity.Player
 import java.util.UUID
 
 /**
  * Generates the teams for the game
  */
-class TeamGenerator(private val queueList: MutableList<UUID>, private val partyMap: HashMap<UUID, UUID>) : Listener {
+class TeamGenerator(private val queueList: MutableList<UUID>, private val partyMap: HashMap<UUID, UUID>) {
     val teamMap = mutableMapOf<UUID, TeamColour>()
 
     fun assignTeams() {
@@ -43,6 +43,14 @@ class TeamGenerator(private val queueList: MutableList<UUID>, private val partyM
         }
     }
 
+    fun messageTeam(player: Player?) {
+        if (player == null || teamMap[player.uniqueId] == null) return
+
+        val playerTeam = teamMap[player.uniqueId]!!
+
+        player.sendMessage("§l§aYou are on team: ${playerTeam.minecraftName}.")
+    }
+
     private fun getTeamWithFewerPlayers(exclude: TeamColour? = null): TeamColour {
         return TeamColour.entries
             .filter { it != exclude }
@@ -59,9 +67,9 @@ class TeamGenerator(private val queueList: MutableList<UUID>, private val partyM
     }
 }
 
-enum class TeamColour {
-    RED,
-    BLUE,
-    YELLOW,
-    LIME
+enum class TeamColour(val minecraftName: String) {
+    RED("§cRED"),
+    BLUE("§9BLUE"),
+    YELLOW("§eYELLOW"),
+    LIME("§qLIME")
 }
