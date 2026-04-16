@@ -77,6 +77,6 @@ class TeamGenerator(private val queueList: MutableList<UUID>, private val partyM
 enum class TeamColour(val minecraftName: String) {
     RED("§cRED"),
     BLUE("§9BLUE"),
-    YELLOW("§eYELLOW"),
-    LIME("§qLIME")
+//    YELLOW("§eYELLOW"),
+//    LIME("§qLIME")
 }
