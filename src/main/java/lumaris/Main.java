@@ -1,9 +1,6 @@
 package lumaris;
 
-import lumaris.command.Hub;
-import lumaris.command.Party;
-import lumaris.command.PartyChat;
-import lumaris.command.SpawnNPC;
+import lumaris.command.*;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -17,6 +14,7 @@ public final class Main extends JavaPlugin {
         getLogger().info("Lumaris 1.21.11 Systems Enabled!");
 
         PluginCommand hubCommand = getCommand("hub");
+        PluginCommand adminHubCommand = getCommand("adminhub");
         PluginCommand spawnNPCCommand = getCommand("spawnnpc");
         PluginCommand partyCommand = getCommand("party");
         PluginCommand partyChatCommand = getCommand("partychat");
@@ -26,6 +24,13 @@ public final class Main extends JavaPlugin {
         }
         else {
             getLogger().warning("Hub is not a valid command");
+        }
+
+        if (adminHubCommand != null) {
+            adminHubCommand.setExecutor(new AdminHub());
+        }
+        else {
+            getLogger().warning("Admin Hub is not a valid command");
         }
 
         if (spawnNPCCommand != null) {

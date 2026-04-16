@@ -5,7 +5,7 @@ object Global {
     const val WORLD_NAME: String = "world"
     const val SPAWN_X: Double = -97.5
     const val SPAWN_Y: Double = 178.0
-    const val SPAWN_Z: Double = -224.5
+    const val SPAWN_Z: Double = -214.5
     const val SPAWN_YAW: Float = -180f
     const val SPAWN_PITCH: Float = 1f
 

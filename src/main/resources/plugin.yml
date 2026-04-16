@@ -5,6 +5,9 @@ api-version: 1.21
 commands:
   hub:
     description: Teleport to the hub.
+  adminhub:
+    description: Teleport to the admin hub.
+    permission: lumaris.admin
   party:
     description: Main party and queue command.
     aliases: [p]

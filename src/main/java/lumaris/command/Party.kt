@@ -3,7 +3,6 @@ package lumaris.command
 import lumaris.GameManager
 import lumaris.Global
 import lumaris.Main
-import lumaris.TeamGenerator
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -16,6 +15,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
+import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerInteractAtEntityEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerQuitEvent
@@ -24,6 +24,7 @@ import org.bukkit.scheduler.BukkitRunnable
 import org.bukkit.scheduler.BukkitTask
 import java.util.*
 
+
 class Party(private val plugin: Main) : Listener, CommandExecutor, TabCompleter {
     // Key = specific player. Value = party leader.
     private val partyMap = hashMapOf<UUID, UUID>()
@@ -31,8 +32,6 @@ class Party(private val plugin: Main) : Listener, CommandExecutor, TabCompleter 
     private val queueList = mutableListOf<UUID>()
 
     private var countdownTask: BukkitTask? = null
-
-    private val teamList = mutableListOf<TeamGenerator>()
 
     override fun onTabComplete(
         sender: CommandSender,
@@ -363,6 +362,14 @@ class Party(private val plugin: Main) : Listener, CommandExecutor, TabCompleter 
                     leaveQueue(player)
                 }
             }
+        }
+    }
+
+    @EventHandler
+    @Suppress("unused")
+    fun onItemDrop(event: PlayerDropItemEvent) {
+        if (event.itemDrop.itemStack.type == Material.BARRIER) {
+            event.isCancelled = true;
         }
     }
 
