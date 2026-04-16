@@ -1,6 +1,7 @@
 package lumaris;
 
 import lumaris.command.*;
+import lumaris.listener.BattleboxItems;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -11,6 +12,7 @@ public final class Main extends JavaPlugin {
         Party partySystem = new Party(this);
 
         getServer().getPluginManager().registerEvents(partySystem, this);
+        getServer().getPluginManager().registerEvents(new BattleboxItems(this), this);
         getLogger().info("Lumaris 1.21.11 Systems Enabled!");
 
         PluginCommand hubCommand = getCommand("hub");
@@ -18,6 +20,7 @@ public final class Main extends JavaPlugin {
         PluginCommand spawnNPCCommand = getCommand("spawnnpc");
         PluginCommand partyCommand = getCommand("party");
         PluginCommand partyChatCommand = getCommand("partychat");
+        PluginCommand dolphinCommand = getCommand("dolphinfun");
 
         if (hubCommand != null) {
             hubCommand.setExecutor(new Hub());
@@ -27,7 +30,7 @@ public final class Main extends JavaPlugin {
         }
 
         if (adminHubCommand != null) {
-            adminHubCommand.setExecutor(new AdminHub());
+            adminHubCommand.setExecutor(new AdminHub(this));
         }
         else {
             getLogger().warning("Admin Hub is not a valid command");
@@ -53,6 +56,13 @@ public final class Main extends JavaPlugin {
         }
         else {
             getLogger().warning("Party chat is not a valid command");
+        }
+
+        if (dolphinCommand != null) {
+            dolphinCommand.setExecutor(new DolphinCommand());
+        }
+        else {
+            getLogger().warning("Dolphin Command is not a valid command");
         }
     }
 }

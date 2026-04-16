@@ -18,3 +18,5 @@ commands:
   partychat:
     description: Chat with your party.
     aliases: [pc]
+  dolphinfun:
+    description: Hi.
