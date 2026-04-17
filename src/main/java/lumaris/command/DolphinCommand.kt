@@ -9,6 +9,8 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Dolphin
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 import org.bukkit.util.Vector
 
 class DolphinCommand : CommandExecutor {
@@ -36,8 +38,15 @@ class DolphinCommand : CommandExecutor {
             spawnParticle(Particle.OMINOUS_SPAWNING, loc, 100, 1.5, 1.0, 1.5)
         }
 
+        val amount = if (args.isEmpty()) {
+            300
+        }
+        else {
+            args[0].toInt()
+        }
+
         // 2. Spawn temporary dolphins
-        repeat(300) {
+        repeat(amount) {
             val dolphin = loc.world.spawnEntity(loc, EntityType.DOLPHIN) as? Dolphin ?: return@repeat
 
             dolphin.apply {
@@ -47,9 +56,12 @@ class DolphinCommand : CommandExecutor {
                 setHasFish(true)
                 isGlowing = true
 
-                isInvisible = true
-
                 isInvulnerable = true
+
+                addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, PotionEffect.INFINITE_DURATION, 255))
+
+                setBaby()
+
                 // Toss them in random directions
                 velocity = Vector(
                     (Math.random() - 0.5) * 1.5,
