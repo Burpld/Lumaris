@@ -13,7 +13,7 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.util.Vector
 
-class DolphinCommand : CommandExecutor {
+class Dolphin : CommandExecutor {
     override fun onCommand(
         sender: CommandSender,
         command: Command,

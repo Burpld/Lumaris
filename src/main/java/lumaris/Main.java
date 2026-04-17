@@ -10,6 +10,7 @@ public final class Main extends JavaPlugin {
     @Override
     public void onEnable() {
         Party partySystem = new Party(this);
+        SpawnBattleItem spawnBattleItem = new SpawnBattleItem(this);
 
         getServer().getPluginManager().registerEvents(partySystem, this);
         getServer().getPluginManager().registerEvents(new BattleboxItems(this), this);
@@ -21,6 +22,7 @@ public final class Main extends JavaPlugin {
         PluginCommand partyCommand = getCommand("party");
         PluginCommand partyChatCommand = getCommand("partychat");
         PluginCommand dolphinCommand = getCommand("dolphinfun");
+        PluginCommand spawnBattleItemCommand = getCommand("spawnbattleitem");
 
         if (hubCommand != null) {
             hubCommand.setExecutor(new Hub());
@@ -30,7 +32,7 @@ public final class Main extends JavaPlugin {
         }
 
         if (adminHubCommand != null) {
-            adminHubCommand.setExecutor(new AdminHub(this));
+            adminHubCommand.setExecutor(new AdminHub());
         }
         else {
             getLogger().warning("Admin Hub is not a valid command");
@@ -59,10 +61,18 @@ public final class Main extends JavaPlugin {
         }
 
         if (dolphinCommand != null) {
-            dolphinCommand.setExecutor(new DolphinCommand());
+            dolphinCommand.setExecutor(new Dolphin());
         }
         else {
             getLogger().warning("Dolphin Command is not a valid command");
+        }
+
+        if (spawnBattleItemCommand != null) {
+            spawnBattleItemCommand.setExecutor(spawnBattleItem);
+            spawnBattleItemCommand.setTabCompleter(spawnBattleItem);
+        }
+        else {
+            getLogger().warning("Spawn Battle Item is not a valid command");
         }
     }
 }

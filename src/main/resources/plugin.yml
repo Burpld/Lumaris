@@ -20,3 +20,5 @@ commands:
     aliases: [pc]
   dolphinfun:
     description: Hi.
+  spawnbattleitem:
+    description: Spawns an item from the battle gamemode.

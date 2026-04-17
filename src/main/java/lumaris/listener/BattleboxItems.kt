@@ -18,6 +18,7 @@ import org.bukkit.potion.PotionEffectType
 import org.bukkit.boss.BarColor
 import org.bukkit.boss.BarStyle
 import org.bukkit.boss.BossBar
+import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.scheduler.BukkitRunnable
 import java.util.UUID
 import kotlin.math.cos
@@ -149,11 +150,23 @@ class BattleboxItems(plugin: Main) : Listener {
             }
             else {
                 // FALLBACK: If used outside a game (e.g., testing), just heal the user
-                player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 100, 1))
+                player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 60, 2))
                 player.sendMessage("§a§l(!) §aApplied self-regeneration (Not in a game).")
             }
             
             event.isCancelled = true // Prevent default firework interactions
+        }
+    }
+
+    @EventHandler
+    fun onItemDrop(event: PlayerDropItemEvent) {
+        val item = event.itemDrop.itemStack
+
+        val meta = item.itemMeta ?: return
+        val specialId = meta.persistentDataContainer.get(specialIdKey, PersistentDataType.STRING)
+
+        if (item.type == Material.FIREWORK_STAR || specialId == "regeneration_circle") {
+            event.isCancelled = true;
         }
     }
 
@@ -196,7 +209,7 @@ class BattleboxItems(plugin: Main) : Listener {
                 // Verify world and distance
                 if (teammate.world == clicker.world && teammate.location.distance(clicker.location) <= radius) {
                     // Apply Regeneration II (level 1 = II) for 5 seconds
-                    teammate.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 100, 1))
+                    teammate.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 60, 2))
                     teammate.sendMessage("§a§l(!) §aYou received regeneration from ${clicker.name}'s item!")
                 }
             }
