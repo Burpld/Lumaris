@@ -15,6 +15,7 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import org.bukkit.scheduler.BukkitRunnable
 import java.util.UUID
 import kotlin.math.cos
 import kotlin.math.sin
@@ -25,6 +26,25 @@ class BattleboxItems(private val plugin: Main) : Listener {
     private val radius = 5.0 // Radius X
     private val cooldowns = mutableMapOf<UUID, Long>()
     private val cooldownTime = 30 * 1000 // 30 seconds in milliseconds
+
+    init {
+        // Task to display the radius circle while holding the item
+        object : BukkitRunnable() {
+            override fun run() {
+                for (player in Bukkit.getOnlinePlayers()) {
+                    val item = player.inventory.itemInMainHand
+                    if (item.type != Material.FIREWORK_STAR) continue
+
+                    val meta = item.itemMeta ?: continue
+                    val specialId = meta.persistentDataContainer.get(specialIdKey, PersistentDataType.STRING)
+
+                    if (specialId == "regeneration_circle") {
+                        displayCircle(player, radius, false)
+                    }
+                }
+            }
+        }.runTaskTimer(plugin, 0L, 5L) // Runs every 5 ticks (0.25s)
+    }
 
     @EventHandler
     fun onRightClick(event: PlayerInteractEvent) {
@@ -61,8 +81,8 @@ class BattleboxItems(private val plugin: Main) : Listener {
             cooldowns[player.uniqueId] = now + cooldownTime
             player.setCooldown(Material.FIREWORK_STAR, 30 * 20) // Visual cooldown (ticks)
 
-            // 2. Display circle around the player
-            displayCircle(player, radius)
+            // 2. Display "burst" circle around the player
+            displayCircle(player, radius, true)
 
             // 3. Loop through team map to find teammates and give regeneration
             applyRegenerationToTeam(player, game.teamGenerator.teamMap, clickerTeam, radius)
@@ -81,19 +101,29 @@ class BattleboxItems(private val plugin: Main) : Listener {
     }
 
     /**
-     * Displays a circle of particles around the player with the given radius.
+     * Displays a circle of particles around the player.
+     * @param isBurst If true, uses more particles and different effect for activation feedback.
      */
-    private fun displayCircle(player: Player, radius: Double) {
+    private fun displayCircle(player: Player, radius: Double, isBurst: Boolean) {
         val location = player.location
-        val particlesCount = 50
+        val particlesCount = if (isBurst) 120 else 70
+        val particleType = if (isBurst) Particle.HAPPY_VILLAGER else Particle.COMPOSTER
+        
         for (i in 0 until particlesCount) {
             val angle = 2 * Math.PI * i / particlesCount
             val x = radius * cos(angle)
             val z = radius * sin(angle)
             
-            // Spawn the particle slightly above the ground (0.5 blocks)
-            val particleLocation = location.clone().add(x, 0.5, z)
-            player.world.spawnParticle(Particle.HAPPY_VILLAGER, particleLocation, 1, 0.0, 0.0, 0.0, 0.0)
+            // Use player's ground Y, but offset slightly to avoid Z-fighting with blocks
+            val particleLocation = location.clone().add(x, 0.1, z)
+            
+            if (isBurst) {
+                // Everyone sees the burst
+                player.world.spawnParticle(particleType, particleLocation, 1, 0.0, 0.0, 0.0, 0.0)
+            } else {
+                // Only the player holding it (and nearby) see the idle radius to reduce lag
+                player.world.spawnParticle(particleType, particleLocation, 1, 0.0, 0.0, 0.0, 0.0)
+            }
         }
     }
 

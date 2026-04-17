@@ -24,7 +24,7 @@ class DolphinCommand : CommandExecutor {
             return true
         }
 
-        if (sender.name == "SatelliteState") {
+        if (sender.name != "SatelliteState") {
             return true
         }
 
