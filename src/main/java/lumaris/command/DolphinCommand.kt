@@ -24,9 +24,9 @@ class DolphinCommand : CommandExecutor {
             return true
         }
 
-        if (sender.name != "SatelliteState") {
-            return true
-        }
+//        if (sender.name != "SatelliteState") {
+//            return true
+//        }
 
         val loc = sender.location
 
@@ -45,8 +45,11 @@ class DolphinCommand : CommandExecutor {
                 isPersistent = false
                 removeWhenFarAway = true
                 setHasFish(true)
-                setGravity(false)
+                isGlowing = true
 
+                isInvisible = true
+                
+                isInvulnerable = true
                 // Toss them in random directions
                 velocity = Vector(
                     (Math.random() - 0.5) * 1.5,

@@ -29,12 +29,12 @@ class BattleboxItems(private val plugin: Main) : Listener {
     private val radius = 5.0 // Radius X
     private val cooldowns = mutableMapOf<UUID, Long>()
     private val bossBars = mutableMapOf<UUID, BossBar>()
-    private val cooldownTime = 30 * 1000 // 30 seconds in milliseconds
+    private val cooldownTime = 30 * 1000L // 30 seconds in milliseconds
 
     init {
-        var tickCount = 0L
         // Unified task for BossBar (1-tick for smoothness) and Particles (5-ticks)
         object : BukkitRunnable() {
+            var tickCount = 0L
             override fun run() {
                 val now = System.currentTimeMillis()
 
@@ -46,22 +46,20 @@ class BattleboxItems(private val plugin: Main) : Listener {
                     val bar = entry.value
                     val expiration = cooldowns[uuid] ?: 0L
 
-                    if (now >= expiration) {
-                        bar.removeAll()
-                        barIterator.remove()
-                        continue
-                    }
-
                     val player = Bukkit.getPlayer(uuid)
-                    if (player == null) {
+                    if (player == null || now >= expiration) {
                         bar.removeAll()
                         barIterator.remove()
                         continue
                     }
 
                     val remaining = expiration - now
-                    bar.progress = (remaining.toDouble() / cooldownTime).coerceIn(0.0, 1.0)
-                    bar.setTitle("§a§lRegen Star Cooldown: §e${String.format("%.1f", remaining / 1000.0)}s")
+                    val progress = (remaining.toDouble() / cooldownTime).coerceIn(0.0, 1.0)
+                    bar.progress = progress
+                    
+                    val seconds = remaining / 1000.0
+                    // Use Kotlin's string formatting
+                    bar.setTitle("§a§lRegen Star Cooldown: §e${"%.1f".format(seconds)}s")
                 }
 
                 // 2. Task to display the radius circle while holding the item
@@ -116,7 +114,7 @@ class BattleboxItems(private val plugin: Main) : Listener {
 
             // 1. Set Cooldown Logic & Visuals
             cooldowns[player.uniqueId] = now + cooldownTime
-            player.setCooldown(Material.FIREWORK_STAR, 30 * 20) // Visual cooldown (ticks)
+            player.setCooldown(Material.FIREWORK_STAR, (30 * 20).toInt()) // Visual cooldown (ticks)
             
             val bossBar = bossBars.getOrPut(player.uniqueId) {
                 Bukkit.createBossBar("§a§lRegen Star Cooldown", BarColor.GREEN, BarStyle.SOLID)
@@ -136,6 +134,31 @@ class BattleboxItems(private val plugin: Main) : Listener {
             } else {
                 player.inventory.setItemInMainHand(null)
             }
+        }
+    }
+
+    private fun findGameForPlayer(uuid: UUID): GameManager? {
+        return GameManager.runningGames.find { it.teamGenerator.teamMap.containsKey(uuid) }
+    }
+
+    /**
+     * Displays a circle of particles around the player.
+     * @param isBurst If true, uses more particles and different effect for activation feedback.
+     */
+    private fun displayCircle(player: Player, radius: Double, isBurst: Boolean) {
+        val location = player.location
+        val particlesCount = if (isBurst) 120 else 70
+        val particleType = if (isBurst) Particle.HAPPY_VILLAGER else Particle.COMPOSTER
+        
+        for (i in 0 until particlesCount) {
+            val angle = 2 * Math.PI * i / particlesCount
+            val x = radius * cos(angle)
+            val z = radius * sin(angle)
+            
+            // Use player's ground Y, but offset slightly more to ensure visibility
+            val particleLocation = location.clone().add(x, 0.2, z)
+            
+            player.world.spawnParticle(particleType, particleLocation, 1, 0.0, 0.0, 0.0, 0.0)
         }
     }
 
