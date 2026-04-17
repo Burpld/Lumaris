@@ -153,13 +153,6 @@ class BattleboxItems(plugin: Main) : Listener {
                 player.sendMessage("§a§l(!) §aApplied self-regeneration (Not in a game).")
             }
             
-            // 3. CONSUME ITEM: Remove one star from the stack
-            if (item.amount > 1) {
-                item.amount -= 1
-            } else {
-                player.inventory.setItemInMainHand(null)
-            }
-            
             event.isCancelled = true // Prevent default firework interactions
         }
     }
