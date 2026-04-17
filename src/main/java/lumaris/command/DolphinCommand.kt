@@ -21,14 +21,10 @@ class DolphinCommand : CommandExecutor {
         args: Array<String>
     ): Boolean {
         // Ensure only players can run this
-        if (sender !is Player) {
-            sender.sendMessage("This command is for players only!")
+        if (sender !is Player || !sender.isOp) {
+            sender.sendMessage("This command is for admins only!")
             return true
         }
-
-//        if (sender.name != "SatelliteState") {
-//            return true
-//        }
 
         val loc = sender.location
 
