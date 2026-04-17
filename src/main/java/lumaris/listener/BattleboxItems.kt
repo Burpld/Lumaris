@@ -23,22 +23,34 @@ import java.util.UUID
 import kotlin.math.cos
 import kotlin.math.sin
 
-class BattleboxItems(private val plugin: Main) : Listener {
-
+/**
+ * Handles special item interactions for Battlebox, specifically the "Regen Star".
+ */
+class BattleboxItems(plugin: Main) : Listener {
+    // Key used to identify the special item via PersistentDataContainer
     private val specialIdKey = NamespacedKey(plugin, "special_item_id")
-    private val radius = 5.0 // Radius X
+    
+    // The radius for both the visual particle circle and the healing effect
+    private val radius = 10.0
+    
+    // Tracks when each player's cooldown expires (UUID -> Timestamp in ms)
     private val cooldowns = mutableMapOf<UUID, Long>()
+    
+    // Active BossBars for players currently on cooldown (UUID -> BossBar instance)
     private val bossBars = mutableMapOf<UUID, BossBar>()
-    private val cooldownTime = 30 * 1000L // 30 seconds in milliseconds
+    
+    // Duration of the cooldown (30 seconds)
+    private val cooldownTime = 30 * 1000L
 
     init {
-        // Unified task for BossBar (1-tick for smoothness) and Particles (5-ticks)
+        // A single background task that manages all active BossBars and particle visuals
         object : BukkitRunnable() {
             var tickCount = 0L
             override fun run() {
                 val now = System.currentTimeMillis()
 
-                // 1. Update BossBars
+                // 1. UPDATE BOSSBARS
+                // Iterates through all active cooldown bars to update progress and titles
                 val barIterator = bossBars.entries.iterator()
                 while (barIterator.hasNext()) {
                     val entry = barIterator.next()
@@ -47,22 +59,26 @@ class BattleboxItems(private val plugin: Main) : Listener {
                     val expiration = cooldowns[uuid] ?: 0L
 
                     val player = Bukkit.getPlayer(uuid)
+                    
+                    // Remove bar if player left or cooldown finished
                     if (player == null || now >= expiration) {
                         bar.removeAll()
                         barIterator.remove()
                         continue
                     }
 
+                    // Update BossBar progress (starts full, drains to empty)
                     val remaining = expiration - now
                     val progress = (remaining.toDouble() / cooldownTime).coerceIn(0.0, 1.0)
                     bar.progress = progress
                     
+                    // Update the title with remaining time formatted to 1 decimal place
                     val seconds = remaining / 1000.0
-                    // Use Kotlin's string formatting
                     bar.setTitle("§a§lRegen Star Cooldown: §e${"%.1f".format(seconds)}s")
                 }
 
-                // 2. Task to display the radius circle while holding the item
+                // 2. DISPLAY RADIUS CIRCLE
+                // Only runs every 5 ticks (0.25s) to save performance while maintaining visibility
                 if (tickCount % 5 == 0L) {
                     for (player in Bukkit.getOnlinePlayers()) {
                         val item = player.inventory.itemInMainHand
@@ -71,6 +87,7 @@ class BattleboxItems(private val plugin: Main) : Listener {
                         val meta = item.itemMeta ?: continue
                         val specialId = meta.persistentDataContainer.get(specialIdKey, PersistentDataType.STRING)
 
+                        // If holding the Regen Star, show the idle particle circle
                         if (specialId == "regeneration_circle") {
                             displayCircle(player, radius, false)
                         }
@@ -78,7 +95,7 @@ class BattleboxItems(private val plugin: Main) : Listener {
                 }
                 tickCount++
             }
-        }.runTaskTimer(plugin, 0L, 1L)
+        }.runTaskTimer(plugin, 0L, 1L) // Run every 1 tick for smooth BossBar progress
     }
 
     @EventHandler
@@ -86,64 +103,77 @@ class BattleboxItems(private val plugin: Main) : Listener {
         val player = event.player
         val item = event.item ?: return
 
-        // Check for right click action
+        // Validate that the player is right-clicking a Firework Star
         if (event.action != Action.RIGHT_CLICK_AIR && event.action != Action.RIGHT_CLICK_BLOCK) return
-        
-        // Ensure the item is a Firework Star
         if (item.type != Material.FIREWORK_STAR) return
 
         val meta = item.itemMeta ?: return
         val specialId = meta.persistentDataContainer.get(specialIdKey, PersistentDataType.STRING)
 
-        // Check if the Firework Star has the special ID
+        // Verify the special ID matches our Regen Star
         if (specialId == "regeneration_circle") {
-            // Check cooldown
             val now = System.currentTimeMillis()
             val expiration = cooldowns[player.uniqueId] ?: 0L
             
+            // COOLDOWN CHECK: Prevent use if the previous cooldown hasn't finished
             if (now < expiration) {
                 val remaining = (expiration - now) / 1000
                 player.sendMessage("§c§l(!) §cYou must wait $remaining seconds before using this again!")
-                event.isCancelled = true
+                event.isCancelled = true // Prevent actual firework firing
                 return
             }
 
-            // Find the game this player is in
-            val game = findGameForPlayer(player.uniqueId) ?: return
-            val clickerTeam = game.teamGenerator.teamMap[player.uniqueId] ?: return
+            // GAME CONTEXT: Find the player's current game and team to identify teammates
+            val game = findGameForPlayer(player.uniqueId)
+            val clickerTeam = game?.teamGenerator?.teamMap?.get(player.uniqueId)
 
-            // 1. Set Cooldown Logic & Visuals
+            // 1. LOGIC & VISUALS
+            // Set the cooldown timestamp and trigger the vanilla item cooldown (shaded bar)
             cooldowns[player.uniqueId] = now + cooldownTime
-            player.setCooldown(Material.FIREWORK_STAR, (30 * 20)) // Visual cooldown (ticks)
+            player.setCooldown(Material.FIREWORK_STAR, 600) // 30s * 20 ticks
             
+            // Create or update the BossBar for the player
             val bossBar = bossBars.getOrPut(player.uniqueId) {
                 Bukkit.createBossBar("§a§lRegen Star Cooldown", BarColor.GREEN, BarStyle.SOLID)
             }
             bossBar.addPlayer(player)
             bossBar.isVisible = true
 
-            // 2. Display "burst" circle around the player
+            // Trigger the "Burst" visual (larger, brighter particles)
             displayCircle(player, radius, true)
 
-            // 3. Loop through team map to find teammates and give regeneration
-            applyRegenerationToTeam(player, game.teamGenerator.teamMap, clickerTeam, radius)
+            // 2. APPLY EFFECTS
+            if (game != null && clickerTeam != null) {
+                // Heal all teammates in the radius
+                applyRegenerationToTeam(player, game.teamGenerator.teamMap, clickerTeam, radius)
+            }
+            else {
+                // FALLBACK: If used outside a game (e.g., testing), just heal the user
+                player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 100, 1))
+                player.sendMessage("§a§l(!) §aApplied self-regeneration (Not in a game).")
+            }
             
-            // Consume one of the item
+            // 3. CONSUME ITEM: Remove one star from the stack
             if (item.amount > 1) {
                 item.amount -= 1
             } else {
                 player.inventory.setItemInMainHand(null)
             }
+            
+            event.isCancelled = true // Prevent default firework interactions
         }
     }
 
+    /**
+     * Searches through all active games to find which one contains the specified player.
+     */
     private fun findGameForPlayer(uuid: UUID): GameManager? {
         return GameManager.runningGames.find { it.teamGenerator.teamMap.containsKey(uuid) }
     }
 
     /**
-     * Displays a circle of particles around the player.
-     * @param isBurst If true, uses more particles and different effect for activation feedback.
+     * Calculates and spawns a circular particle effect around the player.
+     * @param isBurst If true, uses more particles and a brighter particle type for activation feedback.
      */
     private fun displayCircle(player: Player, radius: Double, isBurst: Boolean) {
         val location = player.location
@@ -155,21 +185,14 @@ class BattleboxItems(private val plugin: Main) : Listener {
             val x = radius * cos(angle)
             val z = radius * sin(angle)
             
-            // Use player's ground Y, but offset slightly to avoid Z-fighting with blocks
-            val particleLocation = location.clone().add(x, 0.1, z)
-            
-            if (isBurst) {
-                // Everyone sees the burst
-                player.world.spawnParticle(particleType, particleLocation, 1, 0.0, 0.0, 0.0, 0.0)
-            } else {
-                // Only the player holding it (and nearby) see the idle radius to reduce lag
-                player.world.spawnParticle(particleType, particleLocation, 1, 0.0, 0.0, 0.0, 0.0)
-            }
+            // Spawn particles slightly above ground to ensure visibility
+            val particleLocation = location.clone().add(x, 0.2, z)
+            player.world.spawnParticle(particleType, particleLocation, 1, 0.0, 0.0, 0.0, 0.0)
         }
     }
 
     /**
-     * Applies regeneration to teammates of the clicker within the specified radius.
+     * Iterates through the team map and applies Regeneration II to teammates within the radius.
      */
     private fun applyRegenerationToTeam(clicker: Player, teamMap: Map<UUID, TeamColour>, clickerTeam: TeamColour, radius: Double) {
         for ((uuid, team) in teamMap) {
@@ -177,9 +200,9 @@ class BattleboxItems(private val plugin: Main) : Listener {
             if (team == clickerTeam) {
                 val teammate = Bukkit.getPlayer(uuid) ?: continue
                 
-                // Check if teammate is in the same world and within the radius
+                // Verify world and distance
                 if (teammate.world == clicker.world && teammate.location.distance(clicker.location) <= radius) {
-                    // Give Regeneration II for 5 seconds (100 ticks)
+                    // Apply Regeneration II (level 1 = II) for 5 seconds
                     teammate.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 100, 1))
                     teammate.sendMessage("§a§l(!) §aYou received regeneration from ${clicker.name}'s item!")
                 }
