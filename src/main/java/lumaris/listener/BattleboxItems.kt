@@ -15,6 +15,9 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import org.bukkit.boss.BarColor
+import org.bukkit.boss.BarStyle
+import org.bukkit.boss.BossBar
 import org.bukkit.scheduler.BukkitRunnable
 import java.util.UUID
 import kotlin.math.cos
@@ -25,25 +28,59 @@ class BattleboxItems(private val plugin: Main) : Listener {
     private val specialIdKey = NamespacedKey(plugin, "special_item_id")
     private val radius = 5.0 // Radius X
     private val cooldowns = mutableMapOf<UUID, Long>()
+    private val bossBars = mutableMapOf<UUID, BossBar>()
     private val cooldownTime = 30 * 1000 // 30 seconds in milliseconds
 
     init {
-        // Task to display the radius circle while holding the item
+        var tickCount = 0L
+        // Unified task for BossBar (1-tick for smoothness) and Particles (5-ticks)
         object : BukkitRunnable() {
             override fun run() {
-                for (player in Bukkit.getOnlinePlayers()) {
-                    val item = player.inventory.itemInMainHand
-                    if (item.type != Material.FIREWORK_STAR) continue
+                val now = System.currentTimeMillis()
 
-                    val meta = item.itemMeta ?: continue
-                    val specialId = meta.persistentDataContainer.get(specialIdKey, PersistentDataType.STRING)
+                // 1. Update BossBars
+                val barIterator = bossBars.entries.iterator()
+                while (barIterator.hasNext()) {
+                    val entry = barIterator.next()
+                    val uuid = entry.key
+                    val bar = entry.value
+                    val expiration = cooldowns[uuid] ?: 0L
 
-                    if (specialId == "regeneration_circle") {
-                        displayCircle(player, radius, false)
+                    if (now >= expiration) {
+                        bar.removeAll()
+                        barIterator.remove()
+                        continue
+                    }
+
+                    val player = Bukkit.getPlayer(uuid)
+                    if (player == null) {
+                        bar.removeAll()
+                        barIterator.remove()
+                        continue
+                    }
+
+                    val remaining = expiration - now
+                    bar.progress = (remaining.toDouble() / cooldownTime).coerceIn(0.0, 1.0)
+                    bar.setTitle("§a§lRegen Star Cooldown: §e${String.format("%.1f", remaining / 1000.0)}s")
+                }
+
+                // 2. Task to display the radius circle while holding the item
+                if (tickCount % 5 == 0L) {
+                    for (player in Bukkit.getOnlinePlayers()) {
+                        val item = player.inventory.itemInMainHand
+                        if (item.type != Material.FIREWORK_STAR) continue
+
+                        val meta = item.itemMeta ?: continue
+                        val specialId = meta.persistentDataContainer.get(specialIdKey, PersistentDataType.STRING)
+
+                        if (specialId == "regeneration_circle") {
+                            displayCircle(player, radius, false)
+                        }
                     }
                 }
+                tickCount++
             }
-        }.runTaskTimer(plugin, 0L, 5L) // Runs every 5 ticks (0.25s)
+        }.runTaskTimer(plugin, 0L, 1L)
     }
 
     @EventHandler
@@ -77,9 +114,15 @@ class BattleboxItems(private val plugin: Main) : Listener {
             val game = findGameForPlayer(player.uniqueId) ?: return
             val clickerTeam = game.teamGenerator.teamMap[player.uniqueId] ?: return
 
-            // 1. Set Cooldown
+            // 1. Set Cooldown Logic & Visuals
             cooldowns[player.uniqueId] = now + cooldownTime
             player.setCooldown(Material.FIREWORK_STAR, 30 * 20) // Visual cooldown (ticks)
+            
+            val bossBar = bossBars.getOrPut(player.uniqueId) {
+                Bukkit.createBossBar("§a§lRegen Star Cooldown", BarColor.GREEN, BarStyle.SOLID)
+            }
+            bossBar.addPlayer(player)
+            bossBar.isVisible = true
 
             // 2. Display "burst" circle around the player
             displayCircle(player, radius, true)

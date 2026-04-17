@@ -44,7 +44,6 @@ class DolphinCommand : CommandExecutor {
                 // Ensure they don't stick around or save to the world
                 isPersistent = false
                 removeWhenFarAway = true
-                health = 2500.0
                 setHasFish(true)
                 setGravity(false)
 
