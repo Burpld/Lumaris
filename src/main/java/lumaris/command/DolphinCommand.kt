@@ -48,7 +48,7 @@ class DolphinCommand : CommandExecutor {
                 isGlowing = true
 
                 isInvisible = true
-                
+
                 isInvulnerable = true
                 // Toss them in random directions
                 velocity = Vector(

@@ -114,7 +114,7 @@ class BattleboxItems(private val plugin: Main) : Listener {
 
             // 1. Set Cooldown Logic & Visuals
             cooldowns[player.uniqueId] = now + cooldownTime
-            player.setCooldown(Material.FIREWORK_STAR, (30 * 20).toInt()) // Visual cooldown (ticks)
+            player.setCooldown(Material.FIREWORK_STAR, (30 * 20)) // Visual cooldown (ticks)
             
             val bossBar = bossBars.getOrPut(player.uniqueId) {
                 Bukkit.createBossBar("§a§lRegen Star Cooldown", BarColor.GREEN, BarStyle.SOLID)
@@ -134,31 +134,6 @@ class BattleboxItems(private val plugin: Main) : Listener {
             } else {
                 player.inventory.setItemInMainHand(null)
             }
-        }
-    }
-
-    private fun findGameForPlayer(uuid: UUID): GameManager? {
-        return GameManager.runningGames.find { it.teamGenerator.teamMap.containsKey(uuid) }
-    }
-
-    /**
-     * Displays a circle of particles around the player.
-     * @param isBurst If true, uses more particles and different effect for activation feedback.
-     */
-    private fun displayCircle(player: Player, radius: Double, isBurst: Boolean) {
-        val location = player.location
-        val particlesCount = if (isBurst) 120 else 70
-        val particleType = if (isBurst) Particle.HAPPY_VILLAGER else Particle.COMPOSTER
-        
-        for (i in 0 until particlesCount) {
-            val angle = 2 * Math.PI * i / particlesCount
-            val x = radius * cos(angle)
-            val z = radius * sin(angle)
-            
-            // Use player's ground Y, but offset slightly more to ensure visibility
-            val particleLocation = location.clone().add(x, 0.2, z)
-            
-            player.world.spawnParticle(particleType, particleLocation, 1, 0.0, 0.0, 0.0, 0.0)
         }
     }
 
