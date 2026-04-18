@@ -54,7 +54,9 @@ class Dolphin : CommandExecutor {
 
                 isInvulnerable = true
 
-                addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, PotionEffect.INFINITE_DURATION, 255))
+                addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, PotionEffect.INFINITE_DURATION, 255, false))
+                addPotionEffect(PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 10, false))
+                addPotionEffect(PotionEffect(PotionEffectType.DOLPHINS_GRACE, PotionEffect.INFINITE_DURATION, 5, false))
 
                 setBaby()
 
