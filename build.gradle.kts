@@ -22,8 +22,8 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
 }
 
-group = "Burpld"
-version = "1.0-SNAPSHOT"
+group = "Burpld & SatelliteState"
+version = "1.1-ALPHA"
 description = "Lumaris"
 
 java {
