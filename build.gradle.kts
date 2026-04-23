@@ -18,7 +18,7 @@ repositories {
 dependencies {
     api(libs.org.jetbrains.kotlin.kotlin.stdlib.jdk8)
     testImplementation(libs.org.jetbrains.kotlin.kotlin.test)
-    compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
+    compileOnly("io.papermc.paper:paper-api:1.21.11-rc3-R0.1-SNAPSHOT")
     implementation(kotlin("stdlib-jdk8"))
 }
 
