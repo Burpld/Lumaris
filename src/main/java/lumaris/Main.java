@@ -11,6 +11,7 @@ public final class Main extends JavaPlugin {
     public void onEnable() {
         Party partySystem = new Party(this);
         SpawnBattleItem spawnBattleItem = new SpawnBattleItem(this);
+        FriendsCommand friendsCommand = new FriendsCommand(partySystem);
 
         getServer().getPluginManager().registerEvents(partySystem, this);
         getServer().getPluginManager().registerEvents(new BattleboxItems(this), this);
@@ -23,7 +24,12 @@ public final class Main extends JavaPlugin {
         PluginCommand partyChatCommand = getCommand("partychat");
         PluginCommand dolphinCommand = getCommand("dolphinfun");
         PluginCommand spawnBattleItemCommand = getCommand("spawnbattleitem");
-
+        PluginCommand viewFriendsCmd = getCommand("viewfriends");
+        PluginCommand addFriendCmd = getCommand("addfriend");
+        PluginCommand removeFriendCmd = getCommand("removefriend");
+        PluginCommand inviteFriendCmd = getCommand("invitefriend");
+        PluginCommand acceptFriendCmd = getCommand("acceptfriend");
+        PluginCommand declineFriendCmd = getCommand("declinefriend");
         if (hubCommand != null) {
             hubCommand.setExecutor(new Hub());
         }
@@ -73,6 +79,36 @@ public final class Main extends JavaPlugin {
         }
         else {
             getLogger().warning("Spawn Battle Item is not a valid command");
+        }
+        if (viewFriendsCmd != null) {
+            viewFriendsCmd.setExecutor(friendsCommand);
+        } else {
+            getLogger().warning("You do not have any Friends at the moment");
+        }
+        if (addFriendCmd != null) {
+            addFriendCmd.setExecutor(friendsCommand);
+        } else {
+            getLogger().warning("Player does not exist/is not found");
+        }
+        if (removeFriendCmd != null) {
+            removeFriendCmd.setExecutor(friendsCommand);
+        } else {
+            getLogger().warning("Friend does not exist in the server");
+        }
+        if (inviteFriendCmd != null) {
+            inviteFriendCmd.setExecutor(friendsCommand);
+        } else {
+            getLogger().warning("Friend does not exist in the server");
+        }
+        if(acceptFriendCmd != null) {
+            acceptFriendCmd.setExecutor(friendsCommand);
+        } else {
+            getLogger().warning("You do not have any friend invites to accept");
+        }
+        if(declineFriendCmd != null) {
+            declineFriendCmd.setExecutor(friendsCommand);
+        } else {
+            getLogger().warning("You do not have any friend invites to decline");
         }
     }
 }
