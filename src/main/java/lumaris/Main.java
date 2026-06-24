@@ -80,34 +80,29 @@ public final class Main extends JavaPlugin {
         else {
             getLogger().warning("Spawn Battle Item is not a valid command");
         }
+        if (viewFriendsCmd != null) {
+            viewFriendsCmd.setExecutor(friendsCommand);
+            viewFriendsCmd.setTabCompleter(friendsCommand); // Added
+        }
         if (addFriendCmd != null) {
             addFriendCmd.setExecutor(friendsCommand);
-        } else {
-            getLogger().warning("Command 'addfriend' is missing from plugin.yml!");
+            addFriendCmd.setTabCompleter(friendsCommand); // Added
         }
-
         if (removeFriendCmd != null) {
             removeFriendCmd.setExecutor(friendsCommand);
-        } else {
-            getLogger().warning("Command 'removefriend' is missing from plugin.yml!");
+            removeFriendCmd.setTabCompleter(friendsCommand); // Added
         }
-
         if (inviteFriendCmd != null) {
             inviteFriendCmd.setExecutor(friendsCommand);
-        } else {
-            getLogger().warning("Command 'invitefriend' is missing from plugin.yml!");
+            inviteFriendCmd.setTabCompleter(friendsCommand); // Added
         }
-
         if (acceptFriendCmd != null) {
             acceptFriendCmd.setExecutor(friendsCommand);
-        } else {
-            getLogger().warning("Command 'acceptfriend' is missing from plugin.yml!");
+            acceptFriendCmd.setTabCompleter(friendsCommand); // Added
         }
-
         if (declineFriendCmd != null) {
             declineFriendCmd.setExecutor(friendsCommand);
-        } else {
-            getLogger().warning("Command 'declinefriend' is missing from plugin.yml!");
+            declineFriendCmd.setTabCompleter(friendsCommand); // Added
         }
     }
 }

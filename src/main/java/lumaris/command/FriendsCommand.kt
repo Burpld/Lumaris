@@ -4,10 +4,11 @@ import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
+import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
 import java.util.UUID
 
-class FriendsCommand(private val partySystem: Party) : CommandExecutor {
+class FriendsCommand(@Suppress("unused") private val partySystem: Any) : CommandExecutor, TabCompleter {
 
     private val friendsMap = mutableMapOf<UUID, MutableList<UUID>>()
     private val incomingRequests = mutableMapOf<UUID, UUID>()
@@ -19,7 +20,6 @@ class FriendsCommand(private val partySystem: Party) : CommandExecutor {
         }
         val player: Player = sender
         val playerUUID = player.uniqueId
-
         val friends = friendsMap.computeIfAbsent(playerUUID) { mutableListOf() }
 
         when (command.name.lowercase()) {
@@ -121,5 +121,14 @@ class FriendsCommand(private val partySystem: Party) : CommandExecutor {
             }
         }
         return false
+    }
+    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String>? {
+        if (args.size == 1) {
+            val cmd = command.name.lowercase()
+            if (cmd == "addfriend" || cmd == "removefriend" || cmd == "invitefriend") {
+                return Bukkit.getOnlinePlayers().map { it.name }.filter { it.startsWith(args[0], true) }
+            }
+        }
+        return mutableListOf()
     }
 }
