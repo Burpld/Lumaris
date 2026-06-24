@@ -80,35 +80,34 @@ public final class Main extends JavaPlugin {
         else {
             getLogger().warning("Spawn Battle Item is not a valid command");
         }
-        if (viewFriendsCmd != null) {
-            viewFriendsCmd.setExecutor(friendsCommand);
-        } else {
-            getLogger().warning("You do not have any Friends at the moment");
-        }
         if (addFriendCmd != null) {
             addFriendCmd.setExecutor(friendsCommand);
         } else {
-            getLogger().warning("Player does not exist/is not found");
+            getLogger().warning("Command 'addfriend' is missing from plugin.yml!");
         }
+
         if (removeFriendCmd != null) {
             removeFriendCmd.setExecutor(friendsCommand);
         } else {
-            getLogger().warning("Friend does not exist in the server");
+            getLogger().warning("Command 'removefriend' is missing from plugin.yml!");
         }
+
         if (inviteFriendCmd != null) {
             inviteFriendCmd.setExecutor(friendsCommand);
         } else {
-            getLogger().warning("Friend does not exist in the server");
+            getLogger().warning("Command 'invitefriend' is missing from plugin.yml!");
         }
-        if(acceptFriendCmd != null) {
+
+        if (acceptFriendCmd != null) {
             acceptFriendCmd.setExecutor(friendsCommand);
         } else {
-            getLogger().warning("You do not have any friend invites to accept");
+            getLogger().warning("Command 'acceptfriend' is missing from plugin.yml!");
         }
-        if(declineFriendCmd != null) {
+
+        if (declineFriendCmd != null) {
             declineFriendCmd.setExecutor(friendsCommand);
         } else {
-            getLogger().warning("You do not have any friend invites to decline");
+            getLogger().warning("Command 'declinefriend' is missing from plugin.yml!");
         }
     }
 }

@@ -22,3 +22,15 @@ commands:
     description: Hi.
   spawnbattleitem:
     description: Spawns an item from the battle gamemode.
+  viewfriends:
+    description: Check your friends list.
+  addfriend:
+    description: Send a friend invitation.
+  removefriend:
+    description: Remove a user from your friends list.
+  invitefriend:
+    description: Invite a friend to your current party.
+  acceptfriend:
+    description: Accept an incoming friend invitation.
+  declinefriend:
+    description: Decline an incoming friend invitation.
