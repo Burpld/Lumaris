@@ -12,7 +12,7 @@ class FriendsCommand(private val partySystem: Party) : CommandExecutor {
     private val friendsMap = mutableMapOf<UUID, MutableList<UUID>>()
     private val incomingRequests = mutableMapOf<UUID, UUID>()
 
-    override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
+    override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<String>): Boolean {
         if (sender !is Player) {
             sender.sendMessage("§cOnly players can use friends commands!")
             return true
