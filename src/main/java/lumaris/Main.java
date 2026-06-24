@@ -4,6 +4,7 @@ import lumaris.command.Hub;
 import lumaris.command.Party;
 import lumaris.command.PartyChat;
 import lumaris.command.SpawnNPC;
+import lumaris.command.FriendsCommand;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -12,6 +13,7 @@ public final class Main extends JavaPlugin {
     @Override
     public void onEnable() {
         Party partySystem = new Party(this);
+        FriendsCommand friendsCommand = new FriendsCommand(partySystem);
 
         getServer().getPluginManager().registerEvents(partySystem, this);
         getLogger().info("Lumaris 1.21.11 Systems Enabled!");
@@ -21,6 +23,12 @@ public final class Main extends JavaPlugin {
         PluginCommand partyCommand = getCommand("party");
         PluginCommand partyChatCommand = getCommand("partychat");
 
+        PluginCommand viewFriendsCmd = getCommand("viewfriends");
+        PluginCommand addFriendCmd = getCommand("addfriend");
+        PluginCommand removeFriendCmd = getCommand("removefriend");
+        PluginCommand inviteFriendCmd = getCommand("invitefriend");
+        PluginCommand acceptFriendCmd = getCommand("acceptfriend");
+        PluginCommand declineFriendCmd = getCommand("declinefriend");
         if (hubCommand != null) {
             hubCommand.setExecutor(new Hub());
         }
@@ -48,6 +56,36 @@ public final class Main extends JavaPlugin {
         }
         else {
             getLogger().warning("Party chat is not a valid command");
+        }
+        if (viewFriendsCmd != null) {
+            viewFriendsCmd.setExecutor(friendsCommand);
+        } else {
+            getLogger().warning("You do not have any Friends at the moment");
+        }
+        if (addFriendCmd != null) {
+           addFriendCmd.setExecutor(friendsCommand);
+        } else {
+            getLogger().warning("Player does not exist/is not found");
+        }
+        if (removeFriendCmd != null) {
+            removeFriendCmd.setExecutor(friendsCommand);
+        } else {
+            getLogger().warning("Friend does not exist in the server");
+        }
+        if (inviteFriendCmd != null) {
+            inviteFriendCmd.setExecutor(friendsCommand);
+        } else {
+            getLogger().warning("Friend does not exist in the server");
+        }
+        if(acceptFriendCmd != null) {
+            acceptFriendCmd.setExecutor(friendsCommand);
+        } else {
+            getLogger().warning("You do not have any friend invites to accept");
+        }
+        if(declineFriendCmd != null) {
+            declineFriendCmd.setExecutor(friendsCommand);
+        } else {
+            getLogger().warning("You do not have any friend invites to decline");
         }
     }
 }
