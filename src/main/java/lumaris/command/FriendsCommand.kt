@@ -10,7 +10,7 @@ import java.util.UUID
 
 class FriendsCommand : CommandExecutor, TabCompleter {
     private val friendsMap = mutableMapOf<UUID, MutableList<UUID>>()
-    private val incomingRequests = mutableMapOf<UUID, UUID>()
+    private val incomingRequests = mutableMapOf<UUID, MutableList<UUID>>()
 
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String> {
         if (sender !is Player) {
@@ -19,14 +19,14 @@ class FriendsCommand : CommandExecutor, TabCompleter {
         }
 
         if (args.size == 1) {
-            return listOf("list", "add", "remove", "partyfriend", "accept", "decline")
+            return listOf("list", "add", "remove", "partyfriend", "accept", "decline").filter { it.startsWith(args[0], true) }
         }
 
         if (args.size == 2) {
             val cmd = args[0].lowercase()
 
             if (cmd == "add" || cmd == "remove") {
-                return Bukkit.getOnlinePlayers().map { it.name }.filter { it.startsWith(args[0], true) }
+                return Bukkit.getOnlinePlayers().map { it.name }.filter { it.startsWith(args[1], true) }
             }
 
             if (cmd == "partyfriend" || cmd == "pf") {
@@ -40,7 +40,12 @@ class FriendsCommand : CommandExecutor, TabCompleter {
 
 
                     return@filter list.contains(player.uniqueId)
-                }
+                }.filter { it.startsWith(args[1], true) }
+            }
+
+            if (cmd == "accept" || cmd == "decline") {
+                val requests = incomingRequests[sender.uniqueId] ?: return listOf()
+                return requests.mapNotNull { Bukkit.getOfflinePlayer(it).name }.filter { it.startsWith(args[1], true) }
             }
         }
 
@@ -55,6 +60,11 @@ class FriendsCommand : CommandExecutor, TabCompleter {
         val player: Player = sender
         val playerUUID = player.uniqueId
         val friends = friendsMap.computeIfAbsent(playerUUID) { mutableListOf() }
+
+        if (args.isEmpty()) {
+            player.sendMessage("§cUsage: /friend [list|add|remove|partyfriend|accept|decline] [Username]")
+            return true
+        }
 
         when(args[0].lowercase()) {
             "list" -> {
@@ -71,7 +81,7 @@ class FriendsCommand : CommandExecutor, TabCompleter {
             }
         }
 
-        if (args.isEmpty()) {
+        if (args.size < 2) {
             player.sendMessage("§cUsage: /friend ${args[0].lowercase()} [Username]")
             return true
         }
@@ -79,7 +89,6 @@ class FriendsCommand : CommandExecutor, TabCompleter {
         val targetName = args[1]
         val targetPlayer = Bukkit.getPlayer(targetName)
 
-        // TODO: currently, each person can only have one pending invite, which can create problems
         when(args[0].lowercase()) {
             "add" -> {
                 if (targetPlayer == null) {
@@ -94,15 +103,16 @@ class FriendsCommand : CommandExecutor, TabCompleter {
                     player.sendMessage("§e${targetPlayer.name} is already your friend!")
                     return true
                 }
-                if (incomingRequests[targetPlayer.uniqueId] == playerUUID) {
+                val targetRequests = incomingRequests[targetPlayer.uniqueId]
+                if (targetRequests != null && targetRequests.contains(playerUUID)) {
                     player.sendMessage("§eYou have already sent a pending request to ${targetPlayer.name}!")
                     return true
                 }
-                incomingRequests[targetPlayer.uniqueId] = playerUUID
+                incomingRequests.computeIfAbsent(targetPlayer.uniqueId) { mutableListOf() }.add(playerUUID)
                 player.sendMessage("§aFriend request sent to ${targetPlayer.name}!")
                 targetPlayer.sendMessage("§9=== Pending Friend Request ===")
                 targetPlayer.sendMessage("§6${player.name} §awants to be your friend!")
-                targetPlayer.sendMessage("§eType §a/friend accept §eor §c/friend decline")
+                targetPlayer.sendMessage("§eType §a/friend accept ${player.name} §eor §c/friend decline ${player.name}")
                 return true
             }
             "remove" -> {
@@ -130,29 +140,37 @@ class FriendsCommand : CommandExecutor, TabCompleter {
                 return true
             }
             "accept" -> {
-                val senderUUID = incomingRequests[playerUUID]
-                if (senderUUID == null) {
-                    player.sendMessage("§cYou do not have any pending friend invitations.")
+                val targetUUID = targetPlayer?.uniqueId ?: Bukkit.getOfflinePlayer(targetName).uniqueId
+                val targetRequests = incomingRequests[playerUUID]
+                if (targetRequests == null || !targetRequests.contains(targetUUID)) {
+                    player.sendMessage("§cYou do not have a pending friend invitation from $targetName.")
                     return true
                 }
-                val senderName = Bukkit.getOfflinePlayer(senderUUID).name ?: "A player"
-                friends.add(senderUUID)
-                friendsMap.computeIfAbsent(senderUUID) { mutableListOf() }.add(playerUUID)
-                incomingRequests.remove(playerUUID)
+                val senderName = Bukkit.getOfflinePlayer(targetUUID).name ?: "A player"
+                friends.add(targetUUID)
+                friendsMap.computeIfAbsent(targetUUID) { mutableListOf() }.add(playerUUID)
+                targetRequests.remove(targetUUID)
+                if (targetRequests.isEmpty()) {
+                    incomingRequests.remove(playerUUID)
+                }
                 player.sendMessage("§aYou accepted $senderName's friend request!")
-                Bukkit.getPlayer(senderUUID)?.sendMessage("§a${player.name} accepted your friend request!")
+                Bukkit.getPlayer(targetUUID)?.sendMessage("§a${player.name} accepted your friend request!")
                 return true
             }
             "decline" -> {
-                val senderUUID = incomingRequests[playerUUID]
-                if (senderUUID == null) {
-                    player.sendMessage("§cYou do not have any pending friend invitations.")
+                val targetUUID = targetPlayer?.uniqueId ?: Bukkit.getOfflinePlayer(targetName).uniqueId
+                val targetRequests = incomingRequests[playerUUID]
+                if (targetRequests == null || !targetRequests.contains(targetUUID)) {
+                    player.sendMessage("§cYou do not have a pending friend invitation from $targetName.")
                     return true
                 }
-                val senderName = Bukkit.getOfflinePlayer(senderUUID).name ?: "A player"
-                incomingRequests.remove(playerUUID)
+                val senderName = Bukkit.getOfflinePlayer(targetUUID).name ?: "A player"
+                targetRequests.remove(targetUUID)
+                if (targetRequests.isEmpty()) {
+                    incomingRequests.remove(playerUUID)
+                }
                 player.sendMessage("§eYou declined $senderName's friend request.")
-                Bukkit.getPlayer(senderUUID)?.sendMessage("§c${player.name} declined your friend request.")
+                Bukkit.getPlayer(targetUUID)?.sendMessage("§c${player.name} declined your friend request.")
                 return true
             }
         }
