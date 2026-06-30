@@ -11,7 +11,7 @@ public final class Main extends JavaPlugin {
     public void onEnable() {
         Party partySystem = new Party(this);
         SpawnBattleItem spawnBattleItem = new SpawnBattleItem(this);
-        FriendsCommand friendsCommand = new FriendsCommand(partySystem);
+        FriendsCommand friendsCommand = new FriendsCommand();
 
         getServer().getPluginManager().registerEvents(partySystem, this);
         getServer().getPluginManager().registerEvents(new BattleboxItems(this), this);
@@ -24,12 +24,8 @@ public final class Main extends JavaPlugin {
         PluginCommand partyChatCommand = getCommand("partychat");
         PluginCommand dolphinCommand = getCommand("dolphinfun");
         PluginCommand spawnBattleItemCommand = getCommand("spawnbattleitem");
-        PluginCommand viewFriendsCmd = getCommand("viewfriends");
-        PluginCommand addFriendCmd = getCommand("addfriend");
-        PluginCommand removeFriendCmd = getCommand("removefriend");
-        PluginCommand inviteFriendCmd = getCommand("invitefriend");
-        PluginCommand acceptFriendCmd = getCommand("acceptfriend");
-        PluginCommand declineFriendCmd = getCommand("declinefriend");
+        PluginCommand friendCommand = getCommand("friend");
+
         if (hubCommand != null) {
             hubCommand.setExecutor(new Hub());
         }
@@ -80,29 +76,13 @@ public final class Main extends JavaPlugin {
         else {
             getLogger().warning("Spawn Battle Item is not a valid command");
         }
-        if (viewFriendsCmd != null) {
-            viewFriendsCmd.setExecutor(friendsCommand);
-            viewFriendsCmd.setTabCompleter(friendsCommand); // Added
+
+        if (friendCommand != null) {
+            friendCommand.setExecutor(friendsCommand);
+            friendCommand.setTabCompleter(friendsCommand);
         }
-        if (addFriendCmd != null) {
-            addFriendCmd.setExecutor(friendsCommand);
-            addFriendCmd.setTabCompleter(friendsCommand); // Added
-        }
-        if (removeFriendCmd != null) {
-            removeFriendCmd.setExecutor(friendsCommand);
-            removeFriendCmd.setTabCompleter(friendsCommand); // Added
-        }
-        if (inviteFriendCmd != null) {
-            inviteFriendCmd.setExecutor(friendsCommand);
-            inviteFriendCmd.setTabCompleter(friendsCommand); // Added
-        }
-        if (acceptFriendCmd != null) {
-            acceptFriendCmd.setExecutor(friendsCommand);
-            acceptFriendCmd.setTabCompleter(friendsCommand); // Added
-        }
-        if (declineFriendCmd != null) {
-            declineFriendCmd.setExecutor(friendsCommand);
-            declineFriendCmd.setTabCompleter(friendsCommand); // Added
+        else {
+            getLogger().warning("Friend Command is not a valid command");
         }
     }
 }

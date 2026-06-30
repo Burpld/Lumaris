@@ -38,12 +38,12 @@ class Party(private val plugin: Main) : Listener, CommandExecutor, TabCompleter 
         command: Command,
         alias: String,
         args: Array<String>
-    ): List<String>? {
+    ): List<String> {
         if (args.size == 1) {
             return listOf("new", "add", "accept", "queue", "dequeue", "leave", "list", "kick", "promote");
         }
 
-        return null;
+        return listOf();
     }
 
     override fun onCommand(
