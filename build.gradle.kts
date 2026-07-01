@@ -6,6 +6,7 @@ plugins {
     `java-library`
     `maven-publish`
     kotlin("jvm") version "2.3.20"
+    id("com.gradleup.shadow") version "8.3.5"
 }
 
 repositories {
@@ -23,9 +24,21 @@ dependencies {
 }
 
 group = "Burpld & SatelliteState"
-version = "1.1-ALPHA"
+version = "1.1.1-ALPHA"
 description = "Lumaris"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+}
+
+tasks.jar {
+    enabled = false
+}
+
+tasks.shadowJar {
+    archiveClassifier.set("")
+}
+
+tasks.assemble {
+    dependsOn(tasks.shadowJar)
 }
