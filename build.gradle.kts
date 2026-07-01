@@ -27,5 +27,5 @@ version = "1.1-ALPHA"
 description = "Lumaris"
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
