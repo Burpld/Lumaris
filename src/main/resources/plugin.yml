@@ -24,5 +24,11 @@ commands:
     description: Spawns an item from the battle gamemode.
   friend:
     description: Main friend command.
-    aliases: [f]
+    aliases: [friends, f]
     usage: /friend <list|add|remove|partyfriend|accept|decline>
+    permission: lumaris.friend
+
+permissions:
+  lumaris.friend:
+    description: Allows players to use the friends command.
+    default: true

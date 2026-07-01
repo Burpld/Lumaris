@@ -11,7 +11,7 @@ public final class Main extends JavaPlugin {
     public void onEnable() {
         Party partySystem = new Party(this);
         SpawnBattleItem spawnBattleItem = new SpawnBattleItem(this);
-        FriendsCommand friendsCommand = new FriendsCommand();
+        FriendsCommand friendSystem = new FriendsCommand();
 
         getServer().getPluginManager().registerEvents(partySystem, this);
         getServer().getPluginManager().registerEvents(new BattleboxItems(this), this);
@@ -78,8 +78,8 @@ public final class Main extends JavaPlugin {
         }
 
         if (friendCommand != null) {
-            friendCommand.setExecutor(friendsCommand);
-            friendCommand.setTabCompleter(friendsCommand);
+            friendCommand.setExecutor(friendSystem);
+            friendCommand.setTabCompleter(friendSystem);
         }
         else {
             getLogger().warning("Friend Command is not a valid command");

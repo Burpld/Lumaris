@@ -23,7 +23,7 @@ class SpawnBattleItem(private val plugin: Main) : CommandExecutor, TabCompleter 
             return listOf("regenstar");
         }
 
-        return null;
+        return listOf();
     }
 
     override fun onCommand(

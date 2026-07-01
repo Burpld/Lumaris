@@ -69,7 +69,7 @@ class FriendsCommand : CommandExecutor, TabCompleter {
         when(args[0].lowercase()) {
             "list" -> {
                 if (friends.isEmpty()) {
-                    player.sendMessage("§eYou don't have any friends added yet. Use /addfriend [Name]!")
+                    player.sendMessage("§eYou don't have any friends added yet. Use /friend add [Name]!")
                     return true
                 }
                 player.sendMessage("§9=== Your Friends List ===")
