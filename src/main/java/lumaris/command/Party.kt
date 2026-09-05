@@ -326,7 +326,7 @@ class Party(private val plugin: Main) : Listener, CommandExecutor, TabCompleter 
             game.teamGenerator.messageTeam(Bukkit.getPlayer(queuedPlayer))
         }
 
-        GameManager.runningGames.add(game)
+        lumaris.battlebox.BattleBoxGame(this.plugin, game).start()
 
         queueList.clear()
     }

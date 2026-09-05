@@ -1,6 +1,11 @@
 package lumaris;
 
+import lumaris.battlebox.ArenaManager;
+import lumaris.battlebox.BattleBoxDeathListener;
+import lumaris.battlebox.CenterBlockListener;
 import lumaris.command.*;
+import lumaris.kit.KitAbilities;
+import lumaris.kit.KitSelector;
 import lumaris.listener.BattleboxItems;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -9,12 +14,20 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class Main extends JavaPlugin {
     @Override
     public void onEnable() {
+        PluginContext.INSTANCE.setInstance(this);
+        ArenaManager.INSTANCE.load(this);
+
         Party partySystem = new Party(this);
         SpawnBattleItem spawnBattleItem = new SpawnBattleItem(this);
         FriendsCommand friendSystem = new FriendsCommand();
+        BattleBoxSetup battleBoxSetup = new BattleBoxSetup(this);
 
         getServer().getPluginManager().registerEvents(partySystem, this);
         getServer().getPluginManager().registerEvents(new BattleboxItems(this), this);
+        getServer().getPluginManager().registerEvents(KitSelector.INSTANCE, this);
+        getServer().getPluginManager().registerEvents(new KitAbilities(this), this);
+        getServer().getPluginManager().registerEvents(new CenterBlockListener(), this);
+        getServer().getPluginManager().registerEvents(new BattleBoxDeathListener(), this);
         getLogger().info("Lumaris 1.21.11 Systems Enabled!");
 
         PluginCommand hubCommand = getCommand("hub");
@@ -25,6 +38,7 @@ public final class Main extends JavaPlugin {
         PluginCommand dolphinCommand = getCommand("dolphinfun");
         PluginCommand spawnBattleItemCommand = getCommand("spawnbattleitem");
         PluginCommand friendCommand = getCommand("friend");
+        PluginCommand battleBoxCommand = getCommand("battlebox");
 
         if (hubCommand != null) {
             hubCommand.setExecutor(new Hub());
@@ -83,6 +97,14 @@ public final class Main extends JavaPlugin {
         }
         else {
             getLogger().warning("Friend Command is not a valid command");
+        }
+
+        if (battleBoxCommand != null) {
+            battleBoxCommand.setExecutor(battleBoxSetup);
+            battleBoxCommand.setTabCompleter(battleBoxSetup);
+        }
+        else {
+            getLogger().warning("Battle Box Command is not a valid command");
         }
     }
 }

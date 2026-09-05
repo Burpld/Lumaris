@@ -27,6 +27,10 @@ commands:
     aliases: [friends, f]
     usage: /friend <list|add|remove|partyfriend|accept|decline>
     permission: lumaris.friend
+  battlebox:
+    description: Configure Battle Box arenas.
+    permission: lumaris.admin
+    usage: /battlebox <setcenter|setspawn|status> <map> [index|team]
 
 permissions:
   lumaris.friend:

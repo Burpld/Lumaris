@@ -7,8 +7,7 @@ object MapSelector {
     }
 }
 
-enum class GameMaps(val id : Int) {
-    ISLAND(1),
+enum class GameMaps(val id: Int) {
     VOLCANO(2),
     NEON_CITY(3)
 }
